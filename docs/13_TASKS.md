@@ -1,0 +1,12 @@
+# Tasks
+- [x] 000 Init
+- [ ] 001 Docs
+- [ ] 002 Cognee
+- [ ] 003 remember
+- [ ] 004 recall
+- [ ] 005 improve
+- [ ] 006 Backend
+- [ ] 007 Frontend
+- [ ] 008 Learning
+- [ ] 009 Developer
+- [ ] 010 Demo

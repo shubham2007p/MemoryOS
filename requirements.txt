@@ -1,0 +1,9 @@
+cognee[groq]>=0.1.15
+streamlit>=1.32.0
+python-dotenv>=1.0.1
+groq>=0.9.0
+google-generativeai>=0.4.0
+mcp>=0.1.0
+fastapi
+uvicorn
+pytest

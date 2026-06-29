@@ -1,0 +1,1 @@
+Read docs then implement current task only.

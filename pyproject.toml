@@ -1,0 +1,13 @@
+[project]
+name = "memoryos"
+version = "0.1.0"
+description = "A persistent cognitive operating system built on Cognee"
+dependencies = [
+    "cognee[groq]>=0.1.15",
+    "streamlit>=1.32.0",
+    "python-dotenv>=1.0.1",
+    "fastapi",
+    "uvicorn",
+    "pytest"
+]
+
