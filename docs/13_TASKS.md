@@ -3,7 +3,7 @@
 - [x] 001 Docs
 - [x] 002 Cognee
 - [x] 003 remember
-- [ ] 004 recall
+- [x] 004 recall
 - [ ] 005 improve
 - [ ] 006 Backend
 - [ ] 007 Frontend
