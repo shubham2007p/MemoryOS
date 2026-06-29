@@ -7,6 +7,6 @@
 - [x] 005 improve
 - [x] 006 Backend
 - [x] 007 Frontend
-- [ ] 008 Learning
+- [x] 008 Learning
 - [ ] 009 Developer
 - [ ] 010 Demo
