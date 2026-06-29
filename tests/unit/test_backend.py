@@ -59,3 +59,29 @@ async def test_specialist_developer_api():
         assert response.status_code == 200
         assert response.json()["answer"] == "It is persistent."
         mock_flow.assert_called_once_with(session_id="session-mock", query="Is MemoryOS persistent?")
+
+@pytest.mark.asyncio
+async def test_specialist_route_api():
+    """Verify POST request to specialist router triggers route_request."""
+    with patch("orchestrator.workflow_engine.WorkflowEngine.route_request", new_callable=AsyncMock) as mock_route:
+        mock_route.return_value = {"answer": "Routed correctly"}
+
+        response = client.post("/api/specialists/route", json={
+            "session_id": "session-mock",
+            "text": "What is the capital of France?"
+        })
+        assert response.status_code == 200
+        assert response.json()["answer"] == "Routed correctly"
+        mock_route.assert_called_once_with(session_id="session-mock", text="What is the capital of France?")
+
+@pytest.mark.asyncio
+async def test_session_complete_api():
+    """Verify POST request to complete session triggers workflow_engine.complete_session."""
+    with patch("orchestrator.workflow_engine.WorkflowEngine.complete_session", new_callable=AsyncMock) as mock_complete:
+        mock_complete.return_value = {"status": "completed"}
+
+        response = client.post("/api/sessions/session-mock/complete")
+        assert response.status_code == 200
+        assert response.json()["status"] == "completed"
+        mock_complete.assert_called_once_with("session-mock")
+

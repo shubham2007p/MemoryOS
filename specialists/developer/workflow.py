@@ -7,11 +7,19 @@ or generated code using the recalled memories.
 import logging
 from typing import Any, Dict
 from memory.recall import recall_data
+from specialists.developer.config import DEVELOPER_MODEL, TEMPERATURE
+from specialists.developer.tools import validate_python_code
+from config.prompts import load_specialist_prompt
 
 logger = logging.getLogger("specialists.developer.workflow")
 
 class DeveloperSpecialist:
     """Specialist responsible for querying memory and generating answers or code."""
+
+    def __init__(self) -> None:
+        self.model_name = DEVELOPER_MODEL
+        self.temperature = TEMPERATURE
+        self.system_prompt = load_specialist_prompt("developer")
 
     async def resolve_query(self, query: str, session_id: str) -> Dict[str, Any]:
         """Query memory and return a synthesized response.
@@ -21,14 +29,23 @@ class DeveloperSpecialist:
             session_id: Active user session ID.
 
         Returns:
-            Dict containing the answer and context used to generate it.
+            Dict containing the answer, context used, syntax checks, and model settings.
         """
         logger.info(f"DeveloperSpecialist resolving query '{query}' for session {session_id}")
         if not query.strip():
             raise ValueError("Empty query provided to resolve_query")
 
+        search_metadata = {
+            "specialist": "developer",
+            "session_id": session_id
+        }
+
         # Recall relevant memories from Cognee
-        recalled_memories = await recall_data(query=query, session_id=session_id)
+        recalled_memories = await recall_data(
+            query=query,
+            session_id=session_id,
+            metadata=search_metadata
+        )
 
         # Format context used
         context_used = []
@@ -57,7 +74,21 @@ class DeveloperSpecialist:
             fact_summary = "\n- ".join(facts)
             answer = f"Based on my memory, I found the following relevant facts:\n- {fact_summary}"
 
+        # Validate python code syntax if code block is found in answer
+        code_valid = None
+        if "```python" in answer:
+            parts = answer.split("```python")
+            if len(parts) > 1:
+                code_block = parts[1].split("```")[0]
+                code_valid = validate_python_code(code_block)
+
         return {
             "answer": answer,
-            "context_used": context_used
+            "context_used": context_used,
+            "code_syntax_valid": code_valid,
+            "model_metadata": {
+                "model_used": self.model_name,
+                "temperature": self.temperature,
+                "system_prompt_length": len(self.system_prompt)
+            }
         }

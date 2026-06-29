@@ -15,11 +15,12 @@ async def test_remember_data_success():
             session_id="session-999"
         )
 
-        mock_remember.assert_called_once_with(
-            data="Test information about MemoryOS",
-            dataset_name="test_dataset",
-            session_id="session-999"
-        )
+        mock_remember.assert_called_once()
+        called_kwargs = mock_remember.call_args[1]
+        assert called_kwargs["data"] == "Test information about MemoryOS"
+        assert called_kwargs["dataset_name"] == "test_dataset"
+        assert called_kwargs["session_id"] == "session-999"
+        assert "metadata" in called_kwargs
         assert result.status == "completed"
 
 @pytest.mark.asyncio

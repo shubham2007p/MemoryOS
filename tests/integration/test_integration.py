@@ -18,7 +18,7 @@ def temp_session_manager():
 
 @pytest.mark.asyncio
 async def test_end_to_end_specialist_workflow(temp_session_manager):
-    """Test the end-to-end interaction flow of specialists and sessions."""
+    """Test the end-to-end interaction flow of specialists, sessions, and routing."""
     workflow_engine = WorkflowEngine(session_manager=temp_session_manager)
 
     # 1. Create a session
@@ -26,42 +26,53 @@ async def test_end_to_end_specialist_workflow(temp_session_manager):
     session_id = session["session_id"]
     assert session_id is not None
 
-    # 2. Ingest information using Learner Specialist
+    # 2. Ingest information using Learner Specialist via Route Request
     mock_remember_res = AsyncMock()
     mock_remember_res.status = "completed"
 
     with patch("cognee.remember", return_value=mock_remember_res) as mock_remember:
-        learn_result = await workflow_engine.execute_learner_flow(
+        # Route a statement -> should run learner flow
+        learn_result = await workflow_engine.route_request(
             session_id=session_id,
             text="MemoryOS is built using FastAPI and Streamlit."
         )
 
         assert learn_result["status"] == "remembered"
-        mock_remember.assert_called_once_with(
-            data="MemoryOS is built using FastAPI and Streamlit.",
-            dataset_name="main_dataset",
-            session_id=session_id
-        )
+        mock_remember.assert_called_once()
+        called_kwargs = mock_remember.call_args[1]
+        assert called_kwargs["data"] == "MemoryOS is built using FastAPI and Streamlit."
+        assert called_kwargs["session_id"] == session_id
 
     # Verify session metadata was updated with the last learned text
     updated_session = temp_session_manager.get_session(session_id)
     assert updated_session["metadata"]["last_learned_text"] == "MemoryOS is built using FastAPI and Streamlit."
 
-    # 3. Retrieve context and answer question using Developer Specialist
+    # 3. Retrieve context and answer question using Developer Specialist via Route Request
     mock_recalled = [{"text": "MemoryOS is built using FastAPI and Streamlit."}]
 
     with patch("cognee.recall", return_value=mock_recalled) as mock_recall:
-        query_result = await workflow_engine.execute_developer_flow(
+        # Route a question -> should run developer flow
+        query_result = await workflow_engine.route_request(
             session_id=session_id,
-            query="What is MemoryOS built on?"
+            text="What is MemoryOS built on?"
         )
 
         assert "MemoryOS is built using FastAPI and Streamlit." in query_result["answer"]
-        mock_recall.assert_called_once_with(
-            query_text="What is MemoryOS built on?",
-            session_id=session_id
-        )
+        mock_recall.assert_called_once()
+        called_kwargs = mock_recall.call_args[1]
+        assert called_kwargs["query_text"] == "What is MemoryOS built on?"
+        assert called_kwargs["session_id"] == session_id
 
     # Verify session metadata was updated with the last query
     final_session = temp_session_manager.get_session(session_id)
     assert final_session["metadata"]["last_query"] == "What is MemoryOS built on?"
+
+    # 4. Complete session and trigger consolidation
+    with patch("memory.triggers.improve_memory", new_callable=AsyncMock) as mock_improve:
+        complete_res = await workflow_engine.complete_session(session_id)
+        assert complete_res["status"] == "completed"
+        mock_improve.assert_called_once_with(session_ids=[session_id])
+
+    # Verify session status is updated to completed
+    completed_session = temp_session_manager.get_session(session_id)
+    assert completed_session["status"] == "completed"

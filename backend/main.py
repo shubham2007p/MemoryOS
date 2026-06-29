@@ -59,6 +59,10 @@ class QueryRequest(BaseModel):
     session_id: str
     query: str
 
+class RouteRequest(BaseModel):
+    session_id: str
+    text: str
+
 class SessionCreateRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
@@ -84,6 +88,16 @@ def list_sessions() -> List[Dict[str, Any]]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/sessions/{session_id}/complete")
+async def complete_session(session_id: str) -> Dict[str, Any]:
+    """Mark a session completed and trigger memory improvements."""
+    try:
+        return await workflow_engine.complete_session(session_id)
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.delete("/api/sessions/{session_id}")
 def delete_session(session_id: str) -> Dict[str, str]:
     """Delete a session."""
@@ -93,6 +107,19 @@ def delete_session(session_id: str) -> Dict[str, str]:
     return {"status": "deleted"}
 
 # Specialist workflow endpoints
+@app.post("/api/specialists/route")
+async def route_specialist(request: RouteRequest) -> Dict[str, Any]:
+    """Classify and route the query automatically to the correct specialist."""
+    try:
+        return await workflow_engine.route_request(
+            session_id=request.session_id,
+            text=request.text
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/specialists/learner")
 async def run_learner(request: IngestRequest) -> Dict[str, Any]:
     """Execute Learner Specialist workflow to ingest info."""
@@ -128,3 +155,4 @@ async def run_improve(session_ids: Optional[List[str]] = None) -> Dict[str, Any]
         return {"status": "improved", "details": str(result)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

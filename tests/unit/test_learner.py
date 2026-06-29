@@ -16,10 +16,12 @@ async def test_learner_specialist_success():
             session_id="session-123"
         )
 
-        mock_remember.assert_called_once_with(
-            data="MemoryOS is built on Cognee.",
-            session_id="session-123"
-        )
+        mock_remember.assert_called_once()
+        called_kwargs = mock_remember.call_args[1]
+        assert called_kwargs["data"] == "MemoryOS is built on Cognee."
+        assert called_kwargs["session_id"] == "session-123"
+        assert "metadata" in called_kwargs
+        assert "custom_prompt" in called_kwargs
         assert result["status"] == "remembered"
         assert result["facts_extracted"] == ["MemoryOS is built on Cognee."]
         assert result["details"]["dataset"] == "test_dataset"
