@@ -22,3 +22,7 @@
 - [x] 020 GET /api/memory, DELETE /api/memory/{id}, GET /api/sessions/{id}/history
 - [x] 021 Frontend Multi-Tab Workspace & Memory Auditor
 - [x] 022 Milestone 3 Verification & Testing
+- [x] 023 SVG Knowledge Graph layout generator
+- [x] 024 Consolidation feedback logs
+- [x] 025 Interactive Memory Timeline & Context panels
+- [x] 026 Milestone 4 Verification & Testing
