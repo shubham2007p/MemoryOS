@@ -8,5 +8,5 @@
 - [x] 006 Backend
 - [x] 007 Frontend
 - [x] 008 Learning
-- [ ] 009 Developer
+- [x] 009 Developer
 - [ ] 010 Demo
