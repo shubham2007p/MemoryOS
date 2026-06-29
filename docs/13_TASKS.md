@@ -17,3 +17,8 @@
 - [x] 015 Memory Lifecycle Triggers
 - [x] 016 Enhanced Retrieval Pipeline
 - [x] 017 Milestone 2 Verification & Testing
+- [x] 018 SQLite memory log index
+- [x] 019 Specialist session history log hook
+- [x] 020 GET /api/memory, DELETE /api/memory/{id}, GET /api/sessions/{id}/history
+- [x] 021 Frontend Multi-Tab Workspace & Memory Auditor
+- [x] 022 Milestone 3 Verification & Testing
