@@ -82,10 +82,25 @@ class DeveloperSpecialist:
                 code_block = parts[1].split("```")[0]
                 code_valid = validate_python_code(code_block)
 
+        # Log memory entry to local SQLite metadata store (Task 2)
+        from orchestrator.session_manager import SessionManager
+        session_mgr = SessionManager()
+        log_res = session_mgr.add_memory_log(
+            session_id=session_id,
+            specialist="developer",
+            text=f"Query: {query} -> Answer: {answer}",
+            metadata={
+                "query": query,
+                "answer": answer,
+                "code_syntax_valid": code_valid
+            }
+        )
+
         return {
             "answer": answer,
             "context_used": context_used,
             "code_syntax_valid": code_valid,
+            "memory_id": log_res["memory_id"],
             "model_metadata": {
                 "model_used": self.model_name,
                 "temperature": self.temperature,

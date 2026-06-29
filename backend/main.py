@@ -147,6 +147,32 @@ async def run_developer(request: QueryRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 # Memory operations endpoints
+@app.get("/api/memory")
+def get_memories(session_id: Optional[str] = None, q: Optional[str] = None) -> List[Dict[str, Any]]:
+    """List all logged memories, with optional session filtering and text query search."""
+    try:
+        if q:
+            return session_manager.search_memories(query=q, session_id=session_id)
+        return session_manager.list_memories(session_id=session_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/sessions/{session_id}/history")
+def get_history(session_id: str) -> List[Dict[str, Any]]:
+    """Get the full history/log of actions within a specific session."""
+    try:
+        return session_manager.get_session_history(session_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/memory/{memory_id}")
+def delete_memory_log(memory_id: str) -> Dict[str, str]:
+    """Delete a specific logged memory entry."""
+    success = session_manager.delete_memory_log(memory_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Memory entry not found")
+    return {"status": "deleted"}
+
 @app.post("/api/memory/improve")
 async def run_improve(session_ids: Optional[List[str]] = None) -> Dict[str, Any]:
     """Trigger memory consolidation for the specified sessions."""
@@ -155,4 +181,5 @@ async def run_improve(session_ids: Optional[List[str]] = None) -> Dict[str, Any]
         return {"status": "improved", "details": str(result)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 

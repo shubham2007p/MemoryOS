@@ -4,10 +4,12 @@ from unittest.mock import AsyncMock, patch
 from orchestrator.session_manager import SessionManager
 from orchestrator.workflow_engine import WorkflowEngine
 
+import uuid
+
 @pytest.fixture
 def temp_session_manager():
     """Fixture to provide a temporary SessionManager for integration testing."""
-    db_path = "test_integration.db"
+    db_path = f"test_integration_{uuid.uuid4().hex}.db"
     manager = SessionManager(db_path=db_path)
     yield manager
     if os.path.exists(db_path):

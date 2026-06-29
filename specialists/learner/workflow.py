@@ -55,9 +55,20 @@ class LearnerSpecialist:
             metadata=metadata
         )
 
+        # Log memory entry to local SQLite metadata store (Task 2)
+        from orchestrator.session_manager import SessionManager
+        session_mgr = SessionManager()
+        log_res = session_mgr.add_memory_log(
+            session_id=session_id,
+            specialist="learner",
+            text=cleaned_text,
+            metadata=metadata
+        )
+
         return {
             "status": "remembered",
             "facts_extracted": [cleaned_text],
+            "memory_id": log_res["memory_id"],
             "details": {
                 "elapsed": getattr(result, "elapsed_seconds", 0.0),
                 "dataset": getattr(result, "dataset_name", "main_dataset"),
