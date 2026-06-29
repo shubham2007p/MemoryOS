@@ -2,7 +2,7 @@
 - [x] 000 Init
 - [x] 001 Docs
 - [x] 002 Cognee
-- [ ] 003 remember
+- [x] 003 remember
 - [ ] 004 recall
 - [ ] 005 improve
 - [ ] 006 Backend
