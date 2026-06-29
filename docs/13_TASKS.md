@@ -10,3 +10,10 @@
 - [x] 008 Learning
 - [x] 009 Developer
 - [x] 010 Demo
+- [x] 011 Complete Specialist System Upgrade
+- [x] 012 Centralized Configuration
+- [x] 013 Expanded Workflow Engine Routing
+- [x] 014 Memory Ingestion Metadata
+- [x] 015 Memory Lifecycle Triggers
+- [x] 016 Enhanced Retrieval Pipeline
+- [x] 017 Milestone 2 Verification & Testing
