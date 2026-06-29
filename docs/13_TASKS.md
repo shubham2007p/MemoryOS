@@ -1,7 +1,7 @@
 # Tasks
 - [x] 000 Init
 - [x] 001 Docs
-- [ ] 002 Cognee
+- [x] 002 Cognee
 - [ ] 003 remember
 - [ ] 004 recall
 - [ ] 005 improve
