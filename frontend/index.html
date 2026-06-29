@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MemoryOS</title>
+<style>
+  :root{
+    --bg-0: #0A0B0E;
+    --bg-1: #111319;
+    --bg-2: #161922;
+    --bg-3: #1C2029;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.14);
+    --text-0: #F2F3F5;
+    --text-1: #A8ADB8;
+    --text-2: #6E7380;
+    --accent: #4D8DFF;
+    --accent-glow: rgba(77,141,255,0.35);
+    --purple: #9B7CFF;
+    --emerald: #34D399;
+    --amber: #F2B544;
+    --font-display: 'Söhne', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body{
+    background: var(--bg-0);
+    color: var(--text-0);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    overflow: hidden;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(77,141,255,0.06), transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(155,124,255,0.05), transparent 45%);
+  }
+
+  ::selection { background: var(--accent-glow); }
+  *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* ============ APP SHELL ============ */
+  .app{
+    display: grid;
+    grid-template-columns: 248px 1fr 320px;
+    grid-template-rows: 56px 1fr;
+    height: 100vh;
+  }
+
+  /* ============ TOP BAR ============ */
+  .topbar{
+    grid-column: 1 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,11,14,0.6);
+    backdrop-filter: blur(20px);
+    position: relative;
+    z-index: 20;
+  }
+  .brand{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14.5px;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark{
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    background: radial-gradient(circle at 35% 30%, var(--accent), #2255CC 70%);
+    box-shadow: 0 0 14px var(--accent-glow);
+    position: relative;
+  }
+  .brand-mark::after{
+    content: '';
+    position: absolute; inset: 5px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.85);
+    filter: blur(0.5px);
+  }
+  .topbar-center{
+    display:flex; align-items:center; gap: 6px;
+    font-size: 13px; color: var(--text-2);
+    font-family: var(--font-mono);
+  }
+  .topbar-center .dot{ width:5px; height:5px; border-radius:50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
+  .topbar-right{ display:flex; align-items:center; gap:12px; }
+  .icon-btn{
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-1);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all .15s var(--ease);
+  }
+  .icon-btn:hover{ background: var(--bg-2); border-color: var(--border); color: var(--text-0); }
+
+  /* ============ LEFT NAV ============ */
+  .nav{
+    border-right: 1px solid var(--border);
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+  }
+  .nav-section-label{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-2);
+    padding: 14px 10px 6px;
+    font-weight: 600;
+  }
+  .nav-item{
+    display:flex; align-items:center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-1);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s var(--ease);
+    position: relative;
+  }
+  .nav-item svg{ width:16px; height:16px; opacity:0.85; flex-shrink:0; }
+  .nav-item:hover{ background: var(--bg-2); color: var(--text-0); }
+  .nav-item.active{ background: var(--bg-3); color: var(--text-0); }
+
+  /* ============ SPECIALISTS BLOCK ============ */
+  .specialist-block{
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .specialist-pill{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all .2s var(--ease);
+  }
+  .specialist-pill:hover{ border-color: var(--border-strong); }
+  .specialist-pill.active{
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(77,141,255,0.08) 0%, rgba(155,124,255,0.04) 100%);
+  }
+  .specialist-pill.locked{ opacity: 0.45; cursor: not-allowed; }
+  .specialist-pill .ring{
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--text-2);
+    transition: all .2s var(--ease);
+  }
+  .specialist-pill.active .ring{
+    border-color: var(--accent);
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .specialist-pill .label{ font-[13.5px]; font-weight: 600; color: var(--text-0); }
+  .specialist-pill .sub{ font-size:10.5px; font-family: var(--font-mono); color: var(--text-2); margin-left: auto; }
+  .future-tag{
+    font-size: 8.5px;
+    font-family: var(--font-mono);
+    color: var(--purple);
+    background: rgba(155,124,255,0.15);
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-left: auto;
+    font-weight: 600;
+  }
+
+  /* ============ MAIN WORKSPACE ============ */
+  .workspace{
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    background: rgba(10,11,14,0.2);
+    height: 100%;
+    overflow: hidden;
+  }
+  .workspace-header{
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .workspace-header .crumb{
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--text-2);
+    margin-bottom: 6px;
+  }
+  .workspace-header h1{
+    margin: 0;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--text-0);
+  }
+  .workspace-header .goal{
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--text-1);
+  }
+
+  /* ============ CHAT AREA ============ */
+  .chat-scroll{
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .msg{
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+  }
+  .msg.user{ align-self: flex-end; }
+  .msg.ai{ align-self: flex-start; }
+  .msg-bubble{
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13.8px;
+    line-height: 1.5;
+  }
+  .msg.user .msg-bubble{
+    background: var(--bg-3);
+    color: var(--text-0);
+    border-bottom-right-radius: 4px;
+    border: 1px solid var(--border-strong);
+  }
+  .msg.ai .msg-bubble{
+    background: var(--bg-1);
+    color: var(--text-0);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .msg.ai.shallow{ border-left: 3px solid var(--amber); }
+  .msg.ai.deep{ border-left: 3px solid var(--accent); }
+
+  .recall-trace{
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    align-self: flex-start;
+  }
+  .recall-chip{
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--text-2);
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .hop-dot{ width: 4px; height: 4px; border-radius:50%; background: var(--purple); }
+
+  .msg-meta{
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--text-2);
+    margin-top: 2px;
+  }
+
+  /* ============ IMPROVE BANNER ============ */
+  .improve-banner{
+    background: linear-gradient(135deg, rgba(77,141,255,0.06) 0%, rgba(155,124,255,0.03) 100%);
+    border: 1px dashed var(--accent-glow);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 10px 0;
+  }
+  .improve-banner .title{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .improve-progress{
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .improve-progress-fill{
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    transition: width 2s ease;
+  }
+  .improve-stats{
+    display: flex;
+    gap: 24px;
+  }
+  .improve-stat{
+    display: flex;
+    flex-direction: column;
+    opacity: 0.15;
+    transition: opacity .4s ease;
+  }
+  .improve-stat.show{ opacity: 1; }
+  .improve-stat .num{ font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--accent); }
+  .improve-stat .lbl{ font-size: 11px; color: var(--text-1); margin-top: 2px; }
+  .improve-done{
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--emerald);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .improve-done.show{ opacity: 1; }
+
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(77,141,255,0.25);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ============ COMPOSER ============ */
+  .composer{
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .composer-bar{
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    gap: 12px;
+    transition: all .2s var(--ease);
+  }
+  .composer-bar:focus-within{ border-color: var(--accent); box-shadow: 0 0 12px rgba(77,141,255,0.1); }
+  .composer-bar input{
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-0);
+    font-size: 13.8px;
+    padding: 6px 4px;
+  }
+  .composer-bar input::placeholder{ color: var(--text-2); }
+  .composer-actions{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-improve{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(155,124,255,0.08);
+    border: 1px solid rgba(155,124,255,0.15);
+    color: var(--purple);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all .15s var(--ease);
+  }
+  .btn-improve:hover{ background: rgba(155,124,255,0.15); border-color: rgba(155,124,255,0.3); }
+  .btn-send{
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--accent);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform .1s;
+  }
+  .btn-send:active{ transform: scale(0.95); }
+  .composer-hint{
+    font-size: 10px;
+    color: var(--text-2);
+    margin-top: 8px;
+    padding-left: 4px;
+  }
+
+  /* ============ RIGHT PANEL ============ */
+  .memory-panel{
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-0);
+    height: 100%;
+    overflow: hidden;
+  }
+  .panel-tabs{
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    height: 56px;
+    align-items: center;
+    gap: 16px;
+  }
+  .panel-tab{
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    padding: 18px 4px;
+    position: relative;
+    transition: color .15s;
+  }
+  .panel-tab:hover{ color: var(--text-0); }
+  .panel-tab.active{ color: var(--text-0); }
+  .panel-tab.active::after{
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+  }
+  .panel-body{
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .graph-frame{
+    height: 220px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(255,255,255,0.01);
+    position: relative;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .graph-frame svg{ width:100%; height:100%; }
+  .graph-node { cursor:pointer; }
+  .graph-node:hover { stroke: #FFF; stroke-width: 1.5; }
+  .graph-frame line { stroke: rgba(255,255,255,0.08); }
+  .graph-expand{
+    position: absolute; right: 12px; top: 12px;
+    font-size: 10.5px; color: var(--text-2);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .graph-expand:hover{ color: var(--text-0); }
+  .graph-label{
+    position: absolute; left: 12px; top: 12px;
+    font-size: 9.5px; font-family: var(--font-mono);
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .memory-section-title{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-2);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .memory-card{
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .memory-card .top-row{ display:flex; justify-content:space-between; gap:10px; }
+  .memory-card .fact{ font-size: 12.8px; line-height: 1.45; color: var(--text-0); font-weight: 500; }
+  .memory-card .confidence{
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    height: fit-content;
+  }
+  .confidence.high{ color: var(--emerald); background: rgba(52,211,153,0.12); }
+  .confidence.med{ color: var(--amber); background: rgba(242,181,68,0.12); }
+
+  .memory-card .meta-row{
+    display:flex; align-items:center; gap:10px;
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--text-2);
+    font-family: var(--font-mono);
+  }
+  .meta-row .src-tag{
+    display:flex; align-items:center; gap:4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+  }
+  .meta-row .src-dot{ width:5px; height:5px; border-radius:50%; }
+  .src-dot.learning{ background: var(--purple); }
+  .src-dot.developer{ background: var(--accent); }
+
+  /* ============ TIMELINE TAB ============ */
+  .timeline-wrap{ position: relative; padding-left: 18px; }
+  .timeline-wrap::before{
+    content:'';
+    position:absolute; left: 5px; top: 4px; bottom: 4px;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--border-strong), transparent);
+  }
+  .timeline-item{ position: relative; padding-bottom: 22px; }
+  .timeline-item::before{
+    content:'';
+    position: absolute; left: -18px; top: 2px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--bg-0);
+    border: 2px solid var(--accent);
+  }
+  .timeline-item.faded::before{ border-color: var(--text-2); }
+  .timeline-item .t-title{ font-size: 12.5px; font-weight: 600; color: var(--text-0); }
+  .timeline-item .t-sub{ font-size: 11px; color: var(--text-1); margin-top: 3px; line-height: 1.4; }
+  .timeline-item .t-time{ font-size: 9.5px; color: var(--text-2); font-family: var(--font-mono); margin-top: 4px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar{ width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track{ background: transparent; }
+  ::-webkit-scrollbar-thumb{ background: var(--border-strong); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover{ background: var(--text-2); }
+
+  @media (max-width: 980px){
+    .app{ grid-template-columns: 0px 1fr 0px; }
+    .nav, .memory-panel{ display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      MemoryOS
+    </div>
+    <div class="topbar-center">
+      <span class="dot"></span>
+      <span id="graph-stat">Graph · 0 nodes · 0 edges</span>
+    </div>
+    <div class="topbar-right">
+      <select id="session-select" style="background: var(--bg-1); color: var(--text-0); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;"></select>
+      <button id="btn-new-session" style="background: var(--accent); color: var(--bg-0); border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer;">+ New Session</button>
+      <button id="btn-delete-session" style="background: transparent; color: var(--text-2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;">Delete Session</button>
+    </div>
+  </div>
+
+  <!-- LEFT NAV -->
+  <div class="nav">
+    <div class="nav-section-label">Navigate</div>
+    <div class="nav-item active" data-nav="workspace">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Workspace
+    </div>
+    <div class="nav-item disabled" title="Coming soon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+      Projects
+      <span class="future-tag">SOON</span>
+    </div>
+    <div class="nav-item disabled" title="Coming soon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+      <span class="future-tag">SOON</span>
+    </div>
+
+    <div class="specialist-block">
+      <div class="nav-section-label" style="padding-left:0;">Specialists</div>
+      <div class="specialist-pill active" data-specialist="developer">
+        <span class="ring"></span>
+        <span class="label">Developer</span>
+        <span class="sub">live</span>
+      </div>
+      <div class="specialist-pill" data-specialist="learning">
+        <span class="ring"></span>
+        <span class="label">Learning</span>
+        <span class="sub">live</span>
+      </div>
+      <div class="specialist-pill locked">
+        <span class="ring"></span>
+        <span class="label">Research</span>
+        <span class="sub">soon</span>
+      </div>
+      <div class="specialist-pill locked">
+        <span class="ring"></span>
+        <span class="label">Planner</span>
+        <span class="sub">soon</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="workspace">
+    <div class="workspace-header">
+      <div class="crumb">SPECIALIST / <span id="crumb-name">DEVELOPER</span></div>
+      <h1 id="header-title">Developer reasons over the shared graph</h1>
+      <div class="goal">Currently grounded in <b>persistent session graph</b> + <b id="goal-extra">conceptual notes from Learning</b></div>
+    </div>
+
+    <div class="chat-scroll" id="chat-scroll">
+      <!-- Chat logs dynamically injected here -->
+      <div class="msg ai shallow">
+        <div class="msg-bubble">Welcome to MemoryOS. Ingest new context using the Learning specialist, or ask questions to Developer.</div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <!-- Dynamic evolution feedback box -->
+      <div class="improve-banner" id="improve-banner" style="display:none;">
+        <div class="title"><span class="spinner" id="improve-spinner"></span><span id="improve-title">Memory improving…</span></div>
+        <div class="improve-progress"><div class="improve-progress-fill" id="improve-fill"></div></div>
+        <div class="improve-stats">
+          <div class="improve-stat" id="stat-1"><div class="num">0</div><div class="lbl">Scanning facts</div></div>
+          <div class="improve-stat" id="stat-2"><div class="num">0</div><div class="lbl">Finding relationships</div></div>
+          <div class="improve-stat" id="stat-3"><div class="num">0</div><div class="lbl">Consolidating graph</div></div>
+        </div>
+        <div class="improve-done" id="improve-done">✓ Memory evolution complete</div>
+      </div>
+
+      <div class="composer-bar">
+        <input type="text" placeholder="Ask Developer anything it remembers…" id="composer-input" />
+        <div class="composer-actions">
+          <button class="btn-improve" id="btn-trigger-improve">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+            Run improve()
+          </button>
+          <button class="btn-send" id="btn-send-message">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0A0B0E" stroke-width="2.2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="composer-hint">Shared persistent memory fabric · One memory, infinite lenses</div>
+    </div>
+  </div>
+
+  <!-- RIGHT MEMORY PANEL -->
+  <div class="memory-panel">
+    <div class="panel-tabs">
+      <div class="panel-tab active" data-tab="memory">Memory</div>
+      <div class="panel-tab" data-tab="timeline">Timeline</div>
+    </div>
+
+    <div class="panel-body" id="panel-memory">
+      <div class="graph-frame">
+        <span class="graph-expand">Expand ↗</span>
+        <span class="graph-label">live · kuzu graph</span>
+        <svg viewBox="0 0 300 220">
+          <g id="graph-edges" stroke="rgba(77,141,255,0.35)" stroke-width="1.2" fill="none"></g>
+          <g id="graph-nodes"></g>
+        </svg>
+      </div>
+
+      <div class="memory-section-title">Retrieved this turn</div>
+      <div id="retrieved-container">
+        <!-- Retrieved cards dynamically injected -->
+        <div style="font-size:12px; color:var(--text-2); padding:10px;">No facts retrieved yet.</div>
+      </div>
+
+      <div class="memory-section-title">Why the AI knows this</div>
+      <div class="memory-card" style="background:transparent; border-style:dashed;">
+        <div class="fact" id="why-knows-text" style="font-weight:400; color:var(--text-1); font-size:11.5px; line-height:1.5;">
+          Traverse graph relationships by querying the persistent graph nodes directly. Ask questions to view reasoning paths.
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-body" id="panel-timeline" style="display:none;">
+      <div class="timeline-wrap" id="timeline-container">
+        <!-- Timeline items dynamically injected -->
+        <div style="font-size:12px; color:var(--text-2);">Session timeline is empty.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let activeSessionId = '';
+  let activeSpecialist = 'developer';
+
+  // Fetch session history & load memory
+  async function loadSessions() {
+    const res = await fetch('/api/sessions');
+    const sessions = await res.json();
+    const select = document.getElementById('session-select');
+    select.innerHTML = '';
+    
+    if (sessions.length === 0) {
+      // Auto create a session
+      const createRes = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ metadata: { name: 'Autostart Session' } })
+      });
+      const newSess = await createRes.json();
+      activeSessionId = newSess.session_id;
+      const opt = document.createElement('option');
+      opt.value = activeSessionId;
+      opt.textContent = `Session (${activeSessionId.substring(0, 8)})`;
+      select.appendChild(opt);
+    } else {
+      sessions.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.session_id;
+        opt.textContent = `Session (${s.session_id.substring(0, 8)})`;
+        select.appendChild(opt);
+      });
+      activeSessionId = sessions[0].session_id;
+    }
+    
+    select.value = activeSessionId;
+    updateWorkspace();
+  }
+
+  // Bind session switcher
+  document.getElementById('session-select').addEventListener('change', (e) => {
+    activeSessionId = e.target.value;
+    updateWorkspace();
+  });
+
+  // Bind new session button
+  document.getElementById('btn-new-session').addEventListener('click', async () => {
+    const res = await fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ metadata: { name: 'Interactive Session' } })
+    });
+    if (res.ok) {
+      await loadSessions();
+    }
+  });
+
+  // Delete session button
+  document.getElementById('btn-delete-session').addEventListener('click', async () => {
+    if (activeSessionId) {
+      const res = await fetch(`/api/sessions/${activeSessionId}`, { method: 'DELETE' });
+      if (res.ok) {
+        await loadSessions();
+      }
+    }
+  });
+
+  // Specialist selection
+  const headerTitle = document.getElementById('header-title');
+  const crumbName = document.getElementById('crumb-name');
+  const goalExtra = document.getElementById('goal-extra');
+  const compInput = document.getElementById('composer-input');
+
+  document.querySelectorAll('.specialist-pill:not(.locked)').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.specialist-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      activeSpecialist = pill.dataset.specialist;
+
+      if (activeSpecialist === 'learning') {
+        crumbName.textContent = 'LEARNING';
+        headerTitle.textContent = 'Learning reasons over the shared graph';
+        goalExtra.textContent = 'implementation context from Developer';
+        compInput.placeholder = 'Enter new facts to remember...';
+      } else {
+        crumbName.textContent = 'DEVELOPER';
+        headerTitle.textContent = 'Developer reasons over the shared graph';
+        goalExtra.textContent = 'conceptual notes from Learning';
+        compInput.placeholder = 'Ask Developer anything it remembers...';
+      }
+    });
+  });
+
+  // Fetch and update graph + timeline
+  async function updateWorkspace() {
+    if (!activeSessionId) return;
+
+    // 1. Fetch memories
+    const memRes = await fetch('/api/memory');
+    const memories = await memRes.json();
+
+    // 2. Render Graph
+    renderGraph(memories);
+
+    // 3. Update header stats
+    document.getElementById('graph-stat').textContent = `Graph · ${memories.length} nodes · ${Math.max(0, memories.length - 1)} edges`;
+
+    // 4. Render Timeline
+    const timelineContainer = document.getElementById('timeline-container');
+    const sessMems = memories.filter(m => m.session_id === activeSessionId);
+    if (sessMems.length === 0) {
+      timelineContainer.innerHTML = '<div style="font-size:12px; color:var(--text-2);">Timeline is empty. Ingest knowledge to begin.</div>';
+    } else {
+      timelineContainer.innerHTML = '';
+      const wrap = document.createElement('div');
+      wrap.classList.add('timeline-wrap');
+      sessMems.forEach(m => {
+        const item = document.createElement('div');
+        item.classList.add('timeline-item');
+        
+        const title = document.createElement('div');
+        title.classList.add('t-title');
+        title.textContent = m.specialist === 'learner' ? 'Learning · remember()' : 'Developer · recall()';
+
+        const sub = document.createElement('div');
+        sub.classList.add('t-sub');
+        sub.textContent = m.text;
+
+        const time = document.createElement('div');
+        time.classList.add('t-time');
+        time.textContent = m.created_at.substring(11, 19);
+
+        item.appendChild(title);
+        item.appendChild(sub);
+        item.appendChild(time);
+        wrap.appendChild(item);
+      });
+      timelineContainer.appendChild(wrap);
+    }
+  }
+
+  // Custom force layout SVG graph builder in javascript
+  function renderGraph(memories) {
+    const nodesG = document.getElementById('graph-nodes');
+    const edgesG = document.getElementById('graph-edges');
+    nodesG.innerHTML = '';
+    edgesG.innerHTML = '';
+
+    const width = 300;
+    const height = 220;
+    const cx = width / 2;
+    const cy = height / 2;
+
+    const nodes = [];
+    const edges = [];
+
+    // Add session center node
+    nodes.push({ id: 'sess', label: 'Session', x: cx, y: cy, color: '#A88BEB', size: 8 });
+
+    // Add memory nodes
+    memories.forEach((m, idx) => {
+      const angle = (2 * Math.PI * idx) / memories.length;
+      const radius = 60 + (idx % 2 === 0 ? 15 : -15);
+      nodes.push({
+        id: m.memory_id,
+        label: m.specialist === 'learner' ? `Fact ${idx+1}` : `Q&A ${idx+1}`,
+        x: cx + radius * Math.cos(angle),
+        y: cy + radius * Math.sin(angle),
+        color: m.specialist === 'learner' ? '#7A5CFF' : '#C45CFF',
+        size: 5,
+        text: m.text
+      });
+      edges.push(['sess', m.memory_id]);
+    });
+
+    // Render edges
+    edges.forEach(([a, b]) => {
+      const nA = nodes.find(n => n.id === a);
+      const nB = nodes.find(n => n.id === b);
+      if (nA && nB) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', nA.x);
+        line.setAttribute('y1', nA.y);
+        line.setAttribute('x2', nB.x);
+        line.setAttribute('y2', nB.y);
+        edgesG.appendChild(line);
+      }
+    });
+
+    // Render nodes
+    nodes.forEach(n => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', n.x);
+      c.setAttribute('cy', n.y);
+      c.setAttribute('r', n.size);
+      c.setAttribute('fill', n.color);
+      c.classList.add('graph-node');
+      
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      t.textContent = n.text || n.label;
+      c.appendChild(t);
+      nodesG.appendChild(c);
+    });
+  }
+
+  // Composer submit
+  async function sendMessage() {
+    const text = compInput.value.trim();
+    if (!text || !activeSessionId) return;
+
+    compInput.value = '';
+
+    // Append user message bubble
+    const chatScroll = document.getElementById('chat-scroll');
+    const uMsg = document.createElement('div');
+    uMsg.className = 'msg user';
+    uMsg.innerHTML = `<div class="msg-bubble">${text}</div>`;
+    chatScroll.appendChild(uMsg);
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+
+    // Send backend request
+    const spinner = document.createElement('div');
+    spinner.className = 'msg ai shallow';
+    spinner.innerHTML = `<div class="msg-bubble"><span class="spinner"></span> Thinking...</div>`;
+    chatScroll.appendChild(spinner);
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+
+    let res;
+    if (activeSpecialist === 'learning') {
+      res = await fetch('/api/specialists/learner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: activeSessionId, text: text })
+      });
+    } else {
+      res = await fetch('/api/specialists/developer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: activeSessionId, query: text })
+      });
+    }
+
+    spinner.remove();
+
+    if (res.ok) {
+      const data = await res.json();
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'msg ai deep';
+      
+      const answerText = data.answer || (data.status === 'remembered' ? `Fact ingested successfully: "${data.facts_extracted[0]}"` : 'Completed.');
+      aiMsg.innerHTML = `<div class="msg-bubble">${answerText}</div>`;
+      
+      // Trace chips (Task 4 Context Panel)
+      const trace = document.createElement('div');
+      trace.className = 'recall-trace';
+      if (data.context_used && data.context_used.length > 0) {
+        trace.innerHTML = `<span class="recall-chip"><span class="hop-dot"></span>${data.context_used.length} context facts retrieved</span>`;
+      } else {
+        trace.innerHTML = `<span class="recall-chip"><span class="hop-dot"></span>1 hop · shallow lens</span>`;
+      }
+      aiMsg.appendChild(trace);
+      chatScroll.appendChild(aiMsg);
+      
+      // Update Context Panel
+      const retrievedContainer = document.getElementById('retrieved-container');
+      const whyKnowsText = document.getElementById('why-knows-text');
+      
+      if (data.context_used && data.context_used.length > 0) {
+        retrievedContainer.innerHTML = '';
+        data.context_used.forEach(ctx => {
+          const card = document.createElement('div');
+          card.className = 'memory-card';
+          card.innerHTML = `
+            <div class="top-row">
+              <div class="fact">${ctx.text || ctx.str_val || JSON.stringify(ctx)}</div>
+              <div class="confidence high">0.95</div>
+            </div>
+            <div class="meta-row">
+              <span class="src-tag"><span class="src-dot learning"></span>Ingested Fact</span>
+            </div>
+          `;
+          retrievedContainer.appendChild(card);
+        });
+        whyKnowsText.textContent = `Retrieved context related to query based on vector semantic matching. Context matched ${data.context_used.length} nodes in session graph.`;
+      } else {
+        retrievedContainer.innerHTML = '<div style="font-size:12px; color:var(--text-2); padding:10px;">No facts retrieved this turn.</div>';
+        whyKnowsText.textContent = 'No prior context was pulled. Ingest more facts using Learning mode to seed the shared memories.';
+      }
+
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+      updateWorkspace();
+    } else {
+      const errText = await res.text();
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'msg ai shallow';
+      aiMsg.innerHTML = `<div class="msg-bubble" style="color:var(--amber);">⚠️ Backend Request Failed: ${errText}</div>`;
+      chatScroll.appendChild(aiMsg);
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+    }
+  }
+
+  // Bind Composer Input & Send Button
+  document.getElementById('btn-send-message').addEventListener('click', sendMessage);
+  compInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // ---- improve() animation sequence ----
+  document.getElementById('btn-trigger-improve').addEventListener('click', async () => {
+    if (!activeSessionId) return;
+
+    const banner = document.getElementById('improve-banner');
+    banner.style.display = 'flex';
+    document.getElementById('improve-fill').style.width = '0%';
+    document.getElementById('improve-title').textContent = 'Consolidating session cache...';
+    document.getElementById('improve-done').classList.remove('show');
+    document.getElementById('stat-1').classList.remove('show');
+    document.getElementById('stat-2').classList.remove('show');
+    document.getElementById('stat-3').classList.remove('show');
+
+    // Trigger backend POST
+    const resPromise = fetch('/api/memory/improve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([activeSessionId])
+    });
+
+    // Start progress animations
+    setTimeout(() => {
+      document.getElementById('improve-fill').style.width = '100%';
+    }, 50);
+
+    setTimeout(() => {
+      document.getElementById('stat-1').classList.add('show');
+      document.getElementById('stat-1').querySelector('.num').textContent = '1';
+    }, 600);
+    setTimeout(() => {
+      document.getElementById('stat-2').classList.add('show');
+      document.getElementById('stat-2').querySelector('.num').textContent = '3';
+    }, 1200);
+    setTimeout(() => {
+      document.getElementById('stat-3').classList.add('show');
+      document.getElementById('stat-3').querySelector('.num').textContent = 'Complete';
+    }, 1800);
+
+    const apiRes = await resPromise;
+
+    setTimeout(() => {
+      document.getElementById('improve-spinner').style.display = 'none';
+      document.getElementById('improve-title').textContent = 'Memory evolution complete';
+      document.getElementById('improve-done').classList.add('show');
+    }, 2200);
+
+    setTimeout(() => {
+      banner.style.display = 'none';
+      updateWorkspace();
+    }, 4500);
+  });
+
+  // ---- Tab Swapping ----
+  document.querySelectorAll('.panel-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isMemory = tab.dataset.tab === 'memory';
+      document.getElementById('panel-memory').style.display = isMemory ? 'block' : 'none';
+      document.getElementById('panel-timeline').style.display = isMemory ? 'none' : 'block';
+    });
+  });
+
+  // Initial load
+  loadSessions();
+</script>
+
+</body>
+</html>

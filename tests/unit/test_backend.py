@@ -7,10 +7,10 @@ from backend.main import app
 client = TestClient(app)
 
 def test_read_root():
-    """Verify that root endpoint returns API name and version."""
+    """Verify that root endpoint serves index.html frontend."""
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"name": "MemoryOS API", "version": "0.1.0"}
+    assert "html" in response.text.lower()
 
 def test_session_api_flow():
     """Verify session CRUD REST endpoints."""

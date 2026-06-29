@@ -51,7 +51,6 @@ async def remember_data(
             data=data,
             dataset_name=dataset_name,
             session_id=session_id,
-            metadata=enriched_metadata,
             **kwargs
         )
         logger.info(f"Successfully triggered remember: status={getattr(result, 'status', 'N/A')}")

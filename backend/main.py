@@ -67,9 +67,15 @@ class SessionCreateRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 @app.get("/")
-def read_root() -> Dict[str, str]:
-    """Base endpoint to check backend health."""
-    return {"name": "MemoryOS API", "version": "0.1.0"}
+def read_root() -> Any:
+    """Serve the index.html frontend."""
+    from fastapi.responses import HTMLResponse
+    import os
+    html_path = os.path.join("frontend", "index.html")
+    if os.path.exists(html_path):
+        with open(html_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>MemoryOS Frontend Not Found</h1>", status_code=404)
 
 # Session endpoints
 @app.post("/api/sessions")

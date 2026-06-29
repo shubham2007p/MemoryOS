@@ -20,7 +20,6 @@ async def test_remember_data_success():
         assert called_kwargs["data"] == "Test information about MemoryOS"
         assert called_kwargs["dataset_name"] == "test_dataset"
         assert called_kwargs["session_id"] == "session-999"
-        assert "metadata" in called_kwargs
         assert result.status == "completed"
 
 @pytest.mark.asyncio
