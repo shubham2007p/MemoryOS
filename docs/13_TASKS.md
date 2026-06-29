@@ -6,7 +6,7 @@
 - [x] 004 recall
 - [x] 005 improve
 - [x] 006 Backend
-- [ ] 007 Frontend
+- [x] 007 Frontend
 - [ ] 008 Learning
 - [ ] 009 Developer
 - [ ] 010 Demo
