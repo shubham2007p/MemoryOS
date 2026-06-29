@@ -4,7 +4,7 @@
 - [x] 002 Cognee
 - [x] 003 remember
 - [x] 004 recall
-- [ ] 005 improve
+- [x] 005 improve
 - [ ] 006 Backend
 - [ ] 007 Frontend
 - [ ] 008 Learning
