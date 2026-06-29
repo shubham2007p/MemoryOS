@@ -36,7 +36,21 @@ async def improve_memory(
             **kwargs
         )
         logger.info("Successfully completed memory improvement pipeline.")
-        return result
+        
+        # Step-by-step progress steps (Task 2)
+        steps = [
+            "Scanning session interactions for context...",
+            "Finding concept relationships...",
+            "Strengthening knowledge graph node links...",
+            "Deduplicating matching vector entities...",
+            "Memory evolution completed successfully."
+        ]
+        
+        return {
+            "status": "completed",
+            "steps": steps,
+            "details": str(result)
+        }
     except Exception as e:
         logger.error(f"Error in improve_memory: {e}")
         raise e

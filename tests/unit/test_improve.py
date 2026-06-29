@@ -17,7 +17,9 @@ async def test_improve_memory_success():
             dataset="test_dataset",
             session_ids=["session-1", "session-2"]
         )
-        assert result == mock_info
+        assert result["status"] == "completed"
+        assert "steps" in result
+        assert str(mock_info) in result["details"]
 
 @pytest.mark.asyncio
 async def test_improve_memory_failure():
