@@ -15,10 +15,26 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+        margin: 0px !important;
+        padding: 0px !important;
+        height: 100vh !important;
+        width: 100vw !important;
+        overflow: hidden !important;
+        background-color: #0A0B0E !important;
+    }
     .block-container {
         padding: 0px !important;
         margin: 0px !important;
         max-width: 100% !important;
+        height: 100vh !important;
+    }
+    div[data-testid="stHtml"] {
+        height: 100vh !important;
+        width: 100vw !important;
+        overflow: hidden !important;
+        padding: 0px !important;
+        margin: 0px !important;
     }
     iframe {
         border: none !important;
@@ -27,10 +43,6 @@ st.markdown("""
         margin: 0 !important;
         padding: 0 !important;
         overflow: hidden !important;
-    }
-    body {
-        margin: 0px !important;
-        padding: 0px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -43,5 +55,5 @@ try:
 except Exception as e:
     html_content = f"<h3>Error loading index.html: {e}</h3>"
 
-# Render the HTML content inside a full viewport container
-st.components.v1.html(html_content, height=900, scrolling=True)
+# Render the HTML content inside a full viewport container with scrolling disabled at the iframe level
+st.components.v1.html(html_content, height=1000, scrolling=False)
