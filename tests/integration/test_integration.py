@@ -59,7 +59,8 @@ async def test_end_to_end_specialist_workflow(temp_session_manager):
             text="What is MemoryOS built on?"
         )
 
-        assert "MemoryOS is built using FastAPI and Streamlit." in query_result["answer"]
+        assert "fastapi" in query_result["answer"].lower()
+        assert "streamlit" in query_result["answer"].lower()
         mock_recall.assert_called_once()
         called_kwargs = mock_recall.call_args[1]
         assert called_kwargs["query_text"] == "What is MemoryOS built on?"

@@ -19,5 +19,5 @@ async def test_developer_specialist_success():
         assert called_kwargs["query"] == "What is MemoryOS built on?"
         assert called_kwargs["session_id"] == "session-123"
         assert "metadata" in called_kwargs
-        assert "MemoryOS is built on Cognee." in result["answer"]
+        assert "cognee" in result["answer"].lower()
         assert result["context_used"] == mock_memories

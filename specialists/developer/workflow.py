@@ -58,7 +58,7 @@ class DeveloperSpecialist:
                     "str_val": str(entry)
                 })
 
-        # Synthesize answer from recalled facts
+        # Synthesize answer from recalled facts using centralized Groq client
         if not context_used:
             answer = "I could not find any relevant memories to answer your question."
         else:
@@ -72,7 +72,34 @@ class DeveloperSpecialist:
                     facts.append(str(ctx))
 
             fact_summary = "\n- ".join(facts)
-            answer = f"Based on my memory, I found the following relevant facts:\n- {fact_summary}"
+            
+            try:
+                from backend.core.groq_client import get_groq_client
+                client = get_groq_client()
+                
+                messages = [
+                    {"role": "system", "content": self.system_prompt},
+                    {
+                        "role": "user",
+                        "content": (
+                            f"User Query: {query}\n\n"
+                            f"Recalled Memory Context:\n{fact_summary}\n\n"
+                            f"Synthesize a helpful answer based on the recalled memory context. "
+                            f"If the context does not contain enough info, politely guide the user."
+                        )
+                    }
+                ]
+                
+                completion = client.chat.completions.create(
+                    model=self.model_name,
+                    messages=messages,
+                    temperature=self.temperature
+                )
+                answer = completion.choices[0].message.content
+            except Exception as e:
+                logger.error(f"Error in DeveloperSpecialist LLM reasoning: {e}")
+                # Fallback to pure memory echo on API failure
+                answer = f"Based on my memory, I found the following relevant facts:\n- {fact_summary}"
 
         # Validate python code syntax if code block is found in answer
         code_valid = None
