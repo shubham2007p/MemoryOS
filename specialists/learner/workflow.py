@@ -38,13 +38,20 @@ class LearnerSpecialist:
 
         token_count = count_approximate_tokens(cleaned_text)
 
-        # Structured metadata for the ingested memory (Task 4)
+        # Better metadata extraction: scan for technical context keywords (Milestone 7)
+        critical_keywords = ["fastapi", "cognee", "database", "sqlite", "groq", "gemini", "setup", "config", "model", "always", "must", "critical"]
+        text_lower = cleaned_text.lower()
+        is_critical = any(kw in text_lower for kw in critical_keywords)
+        importance_level = "high" if is_critical or token_count > 15 else "medium"
+
+        # Structured metadata for the ingested memory
         metadata = {
             "source": "user_input",
             "specialist": "learner",
-            "importance": "high" if token_count > 10 else "medium",
-            "confidence": 1.0,
-            "session_id": session_id
+            "importance": importance_level,
+            "confidence": 1.0 if is_critical else 0.85,
+            "session_id": session_id,
+            "topics": [kw for kw in critical_keywords if kw in text_lower]
         }
 
         # Ingest data using the remember pipeline wrapper
