@@ -1336,6 +1336,11 @@
             const svg = container.querySelector('svg');
             if (!svg) return;
 
+            // Enforce full 100% height and width styling dynamically
+            svg.setAttribute('height', '100%');
+            svg.style.height = '100%';
+            svg.style.width = '100%';
+
             // Setup mode toggles dynamically
             let activeMode = 'static'; // 'static' or 'flow'
             let toggle = container.querySelector('.graph-mode-toggle');
