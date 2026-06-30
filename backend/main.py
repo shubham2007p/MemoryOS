@@ -15,6 +15,8 @@ from memory.cognee_adapter import setup_cognee
 from memory.improve import improve_memory
 from orchestrator.session_manager import SessionManager
 from orchestrator.workflow_engine import WorkflowEngine
+from config.settings import settings, verify_settings_on_startup
+from backend.core.groq_client import get_groq_client, check_groq_connectivity
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("backend.main")
@@ -22,6 +24,17 @@ logger = logging.getLogger("backend.main")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle manager for startup and shutdown operations."""
+    # 1. Verify settings (exits on fatal error)
+    verify_settings_on_startup()
+
+    # 2. Initialize Groq client
+    try:
+        get_groq_client()
+        logger.info("Groq client initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize Groq client: {e}")
+
+    # 3. Initialize Cognee
     logger.info("Initializing Cognee on backend startup...")
     try:
         await setup_cognee()
@@ -76,6 +89,45 @@ def read_root() -> Any:
         with open(html_path, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     return HTMLResponse(content="<h1>MemoryOS Frontend Not Found</h1>", status_code=404)
+
+@app.get("/api/health")
+def health_check() -> Dict[str, Any]:
+    """Comprehensive health check: backend, Groq, models, database, Cognee."""
+    import os
+
+    # Groq connectivity
+    groq_status = check_groq_connectivity()
+
+    # Database status
+    db_exists = os.path.exists("metadata.db")
+
+    # Cognee status
+    try:
+        import cognee
+        cognee_version = getattr(cognee, "__version__", "unknown")
+        cognee_status = "available"
+    except Exception:
+        cognee_version = None
+        cognee_status = "unavailable"
+
+    return {
+        "backend": "running",
+        "groq": groq_status,
+        "models": {
+            "planner": settings.planner_model,
+            "developer": settings.developer_model,
+            "learner": settings.learner_model,
+            "classifier": settings.classifier_model,
+        },
+        "database": {
+            "provider": settings.db_provider,
+            "metadata_db_exists": db_exists,
+        },
+        "cognee": {
+            "status": cognee_status,
+            "version": cognee_version,
+        },
+    }
 
 # Session endpoints
 @app.post("/api/sessions")

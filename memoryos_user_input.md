@@ -9,7 +9,7 @@ This document lists all system dependencies, environment variables, metadata key
 These environment variables are loaded by `config/settings.py` to bootstrap Cognee and LLM providers.
 
 ### API Keys
-- `GROQ_API_KEY`: Required. Primary API key for specialist reasoning (`groq/llama3-8b-8192` and `groq/llama3-70b-8192`).
+- `GROQ_API_KEY`: **Required.** Primary API key for all specialist reasoning via Groq.
 - `GEMINI_API_KEY`: Optional. Fallback/alternative reasoning provider.
 - `OPENAI_API_KEY`: Optional. Can be configured for Cognee standard embeddings if needed.
 - `COGNEE_API_KEY`: Optional. For cloud/hosted Cognee integrations.
@@ -42,6 +42,12 @@ When calling `remember_data()` or logging facts in `SessionManager.add_memory_lo
 ## 3. Specialist Model Mappings
 
 These settings define which models are loaded for each cognitive specialist:
-- **Learner Specialist**: `groq/llama3-8b-8192`
-- **Developer Specialist**: `groq/llama3-70b-8192`
-- **Classifier Router**: `groq/llama3-8b-8192`
+
+| Role | Model | Configured In |
+|---|---|---|
+| **Planner** | `openai/gpt-oss-120b` | `config/settings.py` |
+| **Developer Specialist** | `openai/gpt-oss-120b` | `config/settings.py` |
+| **Learner Specialist** | `qwen/qwen3-32b` | `config/settings.py` |
+| **Classifier Router** | `qwen/qwen3-32b` | `config/settings.py` |
+
+All models are accessed through the centralized Groq client at `backend/core/groq_client.py`.
