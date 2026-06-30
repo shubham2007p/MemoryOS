@@ -826,10 +826,10 @@
 
             // Append AI thinking bubble (shallow state)
             const thinkingDiv = document.createElement('div');
-            thinkingDiv.className = "msg flex flex-col max-w-3xl self-start space-y-2 animate-pulse";
+            thinkingDiv.className = "msg flex flex-col max-w-3xl self-start space-y-2 animate-pulse w-full";
             thinkingDiv.innerHTML = `
                 <div class="text-[9px] font-mono text-secondary uppercase tracking-widest-plus">MemoryOS is reasoning...</div>
-                <div class="bg-os-surface border border-os-border p-5 rounded-xl text-[13px] max-w-xl italic flex items-center gap-2">
+                <div class="bg-os-surface border border-os-border p-5 rounded-xl text-[13px] w-full italic flex items-center gap-2">
                     <span class="animate-spin rounded-full h-3 w-3 border-2 border-os-ink border-t-transparent"></span>
                     <span id="pipeline-status">Searching memory graph...</span>
                 </div>
@@ -914,10 +914,10 @@
             const formattedHtml = renderMarkdown(text);
 
             if (sender === 'user') {
-                messageDiv.className = "msg flex flex-col max-w-3xl self-end space-y-2 align-end text-right items-end";
+                messageDiv.className = "msg flex flex-col max-w-3xl self-end space-y-2 align-end text-right items-end w-full";
                 messageDiv.innerHTML = `
                     <div class="text-[9px] font-mono text-secondary uppercase tracking-widest-plus">You</div>
-                    <div class="prose prose-invert prose-sm bg-os-ink text-os-surface px-5 py-3 rounded-xl text-[13.5px] max-w-xl text-left border border-os-ink shadow-sm">
+                    <div class="prose prose-invert prose-sm bg-os-ink text-os-surface px-5 py-3 rounded-xl text-[13.5px] w-full text-left border border-os-ink shadow-sm">
                         ${formattedHtml}
                     </div>
                 `;
@@ -926,10 +926,10 @@
                 const isDeep = meta.hops !== '1 hop';
                 const borderClass = isDeep ? "border-l-2 border-indigo-500" : "border-l-2 border-amber-500";
 
-                messageDiv.className = `msg flex flex-col max-w-3xl self-start space-y-2 ${borderClass} pl-4`;
+                messageDiv.className = `msg flex flex-col max-w-3xl self-start space-y-2 ${borderClass} pl-4 w-full`;
                 messageDiv.innerHTML = `
                     <div class="text-[9px] font-mono text-secondary uppercase tracking-widest-plus">MemoryOS Specialist / ${meta.specialist.toUpperCase()}</div>
-                    <div class="prose dark:prose-invert prose-sm bg-os-surface border border-os-border p-5 rounded-xl text-[13.5px] max-w-xl leading-relaxed text-os-ink shadow-sm">
+                    <div class="prose dark:prose-invert prose-sm bg-os-surface border border-os-border p-5 rounded-xl text-[13.5px] w-full leading-relaxed text-os-ink shadow-sm">
                         ${formattedHtml}
                     </div>
                     <div class="flex gap-2">
@@ -940,10 +940,10 @@
                     </div>
                 `;
             } else {
-                messageDiv.className = "msg flex flex-col max-w-3xl self-start space-y-2 pl-4 border-l-2 border-red-500";
+                messageDiv.className = "msg flex flex-col max-w-3xl self-start space-y-2 pl-4 border-l-2 border-red-500 w-full";
                 messageDiv.innerHTML = `
                     <div class="text-[9px] font-mono text-red-500 uppercase tracking-widest-plus">System Error</div>
-                    <div class="prose prose-sm bg-os-surface border border-red-200 p-5 rounded-xl text-[13.5px] max-w-xl text-red-700 font-mono shadow-sm">
+                    <div class="prose prose-sm bg-os-surface border border-red-200 p-5 rounded-xl text-[13.5px] w-full text-red-700 font-mono shadow-sm">
                         ${formattedHtml}
                     </div>
                 `;
