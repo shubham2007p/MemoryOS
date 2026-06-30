@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./.cognee:/root/.cognee
+      - ./.cognee_system:/app/.venv/lib/python3.11/site-packages/cognee/.cognee_system
+    restart: always
