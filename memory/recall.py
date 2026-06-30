@@ -31,10 +31,12 @@ async def recall_data(
     """
     logger.info(f"Recalling memory for query: '{query}' (session_id={session_id})")
     try:
+        # Filter out custom parameters not accepted by Cognee recall API
+        cognee_kwargs = {k: v for k, v in kwargs.items() if k not in ["metadata"]}
         results = await cognee.recall(
             query_text=query,
             session_id=session_id,
-            **kwargs
+            **cognee_kwargs
         )
 
         ranked_results = []
