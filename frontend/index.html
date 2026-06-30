@@ -31,14 +31,15 @@
   }
 
   * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; }
+  html, body { margin:0; padding:0; height: 100vh; width: 100vw; overflow: hidden !important; }
   body{
     background: var(--bg-0);
     color: var(--text-0);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     height: 100vh;
-    overflow: hidden;
+    width: 100vw;
+    overflow: hidden !important;
     background-image:
       radial-gradient(circle at 15% 0%, rgba(77,141,255,0.06), transparent 45%),
       radial-gradient(circle at 85% 100%, rgba(155,124,255,0.05), transparent 45%);
@@ -57,6 +58,8 @@
     grid-template-columns: 248px 1fr 320px;
     grid-template-rows: 56px 1fr;
     height: 100vh;
+    width: 100vw;
+    overflow: hidden !important;
   }
 
   /* ============ TOP BAR ============ */
@@ -891,10 +894,11 @@
     
     if (sessions.length === 0) {
       // Auto create a session
+      const dateStr = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
       const createRes = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metadata: { name: 'Workspace Session' } })
+        body: JSON.stringify({ metadata: { name: `Session ${dateStr} #1` } })
       });
       const newSess = await createRes.json();
       activeSessionId = newSess.session_id;
@@ -991,10 +995,14 @@
  
   // Bind new session button
   document.getElementById('btn-new-session').addEventListener('click', async () => {
+    const listRes = await fetch('/api/sessions');
+    const sessionsList = await listRes.json();
+    const nextCount = sessionsList.length + 1;
+    const dateStr = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
     const res = await fetch('/api/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ metadata: { name: 'Session (' + Math.random().toString(36).substring(7).toUpperCase() + ')' } })
+      body: JSON.stringify({ metadata: { name: `Session ${dateStr} #${nextCount}` } })
     });
     if (res.ok) {
       await loadSessions();
@@ -1389,6 +1397,7 @@
     if (!text || !activeSessionId) return;
 
     compInput.value = '';
+    compInput.disabled = true; // Disable input text area of the query writing
 
     // Append user message bubble
     const chatScroll = document.getElementById('chat-scroll');
@@ -1505,6 +1514,8 @@
       chatScroll.appendChild(aiMsg);
       chatScroll.scrollTop = chatScroll.scrollHeight;
     }
+    compInput.disabled = false;
+    compInput.focus();
   }
 
   // Bind Composer Input & Send Button

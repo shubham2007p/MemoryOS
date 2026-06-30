@@ -72,32 +72,10 @@ class WorkflowEngine:
         learner = LearnerSpecialist()
         result = await learner.learn_fact(text, session_id=session_id)
 
-        # Auto-name the session based on the first learned fact (Zero-cost Naming Option C)
-        session_data = self.session_manager.get_session(session_id)
-        current_name = session_data.get("metadata", {}).get("name", "")
-        auto_name = None
-        if not current_name or current_name == "Workspace Session" or current_name.startswith("Session ("):
-            critical_keywords = ["fastapi", "cognee", "sqlite", "graph", "vector", "database", "model", "groq", "gemini"]
-            text_lower = text.lower()
-            for kw in critical_keywords:
-                if kw in text_lower:
-                    auto_name = f"{kw.capitalize()} Workspace"
-                    break
-            if not auto_name:
-                words = [w.capitalize() for w in text.split() if w.isalnum()]
-                if words:
-                    auto_name = " ".join(words[:3]) + "..."
-                else:
-                    auto_name = "Topic Summary"
-
         # Update session metadata
-        metadata_update = {"last_learned_text": text, "last_specialist": "learner"}
-        if auto_name:
-            metadata_update["name"] = auto_name
-            
         self.session_manager.update_session(
             session_id,
-            metadata=metadata_update
+            metadata={"last_learned_text": text, "last_specialist": "learner"}
         )
         return result
 
@@ -121,25 +99,10 @@ class WorkflowEngine:
         developer = DeveloperSpecialist()
         result = await developer.resolve_query(query, session_id=session_id)
 
-        # Auto-name the session based on the first query
-        session_data = self.session_manager.get_session(session_id)
-        current_name = session_data.get("metadata", {}).get("name", "")
-        auto_name = None
-        if not current_name or current_name == "Workspace Session" or current_name.startswith("Session ("):
-            words = [w.capitalize() for w in query.split() if w.isalnum()]
-            if words:
-                auto_name = " ".join(words[:3]) + "?"
-            else:
-                auto_name = "Q&A Session"
-
         # Update session metadata
-        metadata_update = {"last_query": query, "last_specialist": "developer"}
-        if auto_name:
-            metadata_update["name"] = auto_name
-            
         self.session_manager.update_session(
             session_id,
-            metadata=metadata_update
+            metadata={"last_query": query, "last_specialist": "developer"}
         )
         return result
 
