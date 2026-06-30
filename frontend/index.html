@@ -553,10 +553,112 @@
     background: var(--bg-0);
     border: 2px solid var(--accent);
   }
+  .timeline-item.remember::before { border-color: var(--purple); }
+  .timeline-item.recall::before { border-color: var(--accent); }
+  .timeline-item.improve::before { border-color: var(--emerald); }
+  .timeline-item.session-created::before { border-color: var(--amber); }
+  
   .timeline-item.faded::before{ border-color: var(--text-2); }
   .timeline-item .t-title{ font-size: 12.5px; font-weight: 600; color: var(--text-0); }
   .timeline-item .t-sub{ font-size: 11px; color: var(--text-1); margin-top: 3px; line-height: 1.4; }
   .timeline-item .t-time{ font-size: 9.5px; color: var(--text-2); font-family: var(--font-mono); margin-top: 4px; }
+
+  /* ============ MEMORY SEARCH & INTERACTIONS ============ */
+  .memory-search-box {
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .memory-search-box input {
+    width: 100%;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-0);
+    outline: none;
+  }
+  .memory-search-box input:focus {
+    border-color: var(--accent);
+  }
+  .btn-delete-mem {
+    background: transparent;
+    border: none;
+    color: var(--text-2);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .btn-delete-mem:hover {
+    color: var(--accent);
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* ============ MODAL SYSTEM ============ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 480px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    animation: modalSlide 0.2s var(--ease);
+  }
+  @keyframes modalSlide {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text-0);
+  }
+  .modal-meta-row {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-1);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .modal-body-text {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-0);
+    background: var(--bg-0);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin: 16px 0;
+  }
+  .modal-close-btn {
+    background: var(--accent);
+    color: var(--bg-0);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+  }
 
   /* scrollbar */
   ::-webkit-scrollbar{ width: 8px; height: 8px; }
@@ -686,8 +788,9 @@
     </div>
 
     <div class="panel-body" id="panel-memory">
+      <!-- Live Knowledge Graph Frame -->
       <div class="graph-frame">
-        <span class="graph-expand">Expand ↗</span>
+        <span class="graph-expand" onclick="alert('Expanding full Kuzu graph explorer coming soon in Milestone 6.')">Expand ↗</span>
         <span class="graph-label">live · kuzu graph</span>
         <svg viewBox="0 0 300 220">
           <g id="graph-edges" stroke="rgba(77,141,255,0.35)" stroke-width="1.2" fill="none"></g>
@@ -695,25 +798,56 @@
         </svg>
       </div>
 
-      <div class="memory-section-title">Retrieved this turn</div>
-      <div id="retrieved-container">
-        <!-- Retrieved cards dynamically injected -->
-        <div style="font-size:12px; color:var(--text-2); padding:10px;">No facts retrieved yet.</div>
+      <!-- Context Panel (Why the AI knows this) -->
+      <div class="memory-section-title">Context & Reason (Why AI knows this)</div>
+      <div class="memory-card" style="background:transparent; border-style:dashed; margin-bottom: 20px;">
+        <div class="fact" id="why-knows-text" style="font-weight:400; color:var(--text-1); font-size:11.5px; line-height:1.5;">
+          Traverse graph relationships by querying the persistent graph nodes directly. Ingest facts or ask questions to view reasoning paths.
+        </div>
       </div>
 
-      <div class="memory-section-title">Why the AI knows this</div>
-      <div class="memory-card" style="background:transparent; border-style:dashed;">
-        <div class="fact" id="why-knows-text" style="font-weight:400; color:var(--text-1); font-size:11.5px; line-height:1.5;">
-          Traverse graph relationships by querying the persistent graph nodes directly. Ask questions to view reasoning paths.
-        </div>
+      <!-- Context retrieved cards -->
+      <div class="memory-section-title">Retrieved context this turn</div>
+      <div id="retrieved-container" style="margin-bottom: 24px;">
+        <div style="font-size:11.5px; color:var(--text-2); padding:4px;">No facts retrieved yet. Ingest facts to see active context paths.</div>
+      </div>
+
+      <!-- Session memories search and list -->
+      <div class="memory-section-title">Ingested memories list</div>
+      <div class="memory-search-box">
+        <input type="text" placeholder="Search memories..." id="memory-search-input" />
+      </div>
+      <div id="memory-list-container">
+        <!-- Ingested memories with delete button will be listed here -->
+        <div style="font-size:11.5px; color:var(--text-2); padding:4px;">No memories logged. Select Learner Specialist to ingest facts.</div>
       </div>
     </div>
 
+    <!-- Timeline Body -->
     <div class="panel-body" id="panel-timeline" style="display:none;">
       <div class="timeline-wrap" id="timeline-container">
-        <!-- Timeline items dynamically injected -->
-        <div style="font-size:12px; color:var(--text-2);">Session timeline is empty.</div>
+        <div style="font-size:11.5px; color:var(--text-2);">Session timeline is empty. Ingest knowledge to start.</div>
       </div>
+    </div>
+  </div>
+
+  <!-- MEMORY INSPECTOR MODAL -->
+  <div class="modal-overlay" id="inspector-modal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="modal-title">Memory Inspector</h3>
+      <div class="modal-meta-row">
+        <span>Specialist: <b id="modal-specialist" style="color:var(--purple);">learner</b></span>
+        <span>Importance: <b id="modal-importance" style="color:var(--amber);">high</b></span>
+      </div>
+      <div class="modal-meta-row">
+        <span>Confidence: <b id="modal-confidence" style="color:var(--emerald);">1.00</b></span>
+        <span>ID: <b id="modal-id" style="color:var(--text-1);">N/A</b></span>
+      </div>
+      <div class="modal-body-text" id="modal-text"></div>
+      <div class="modal-meta-row" style="margin-top: 8px;">
+        <span style="font-size:10px;">Timestamp: <span id="modal-timestamp">N/A</span></span>
+      </div>
+      <button class="modal-close-btn" onclick="closeInspector()">Close Inspector</button>
     </div>
   </div>
 
@@ -812,49 +946,153 @@
   });
 
   // Fetch and update graph + timeline
+  let allMemories = [];
+
+  // Inspector actions
+  function openInspector(memId) {
+    const mem = allMemories.find(m => m.memory_id === memId);
+    if (!mem) return;
+    
+    document.getElementById('modal-title').textContent = mem.specialist === 'learner' ? 'Ingested Memory Inspector' : 'Developer Q&A Trace';
+    document.getElementById('modal-specialist').textContent = mem.specialist;
+    document.getElementById('modal-importance').textContent = mem.metadata?.importance || 'medium';
+    document.getElementById('modal-confidence').textContent = (mem.metadata?.confidence !== undefined) ? mem.metadata.confidence.toFixed(2) : '1.00';
+    document.getElementById('modal-id').textContent = mem.memory_id.substring(0, 18) + '...';
+    document.getElementById('modal-text').textContent = mem.text;
+    document.getElementById('modal-timestamp').textContent = new Date(mem.created_at).toLocaleString();
+    
+    document.getElementById('inspector-modal').style.display = 'flex';
+  }
+
+  function closeInspector() {
+    document.getElementById('inspector-modal').style.display = 'none';
+  }
+
+  // Delete memory action
+  async function deleteMemory(event, memId) {
+    event.stopPropagation(); // prevent opening inspector modal
+    if (!confirm('Are you sure you want to delete this memory log?')) return;
+    
+    const res = await fetch(`/api/memory/${memId}`, { method: 'DELETE' });
+    if (res.ok) {
+      updateWorkspace();
+    } else {
+      alert('Failed to delete memory log.');
+    }
+  }
+
+  // Search input binding
+  document.getElementById('memory-search-input').addEventListener('input', () => {
+    filterAndRenderMemories();
+  });
+
+  function filterAndRenderMemories() {
+    const query = document.getElementById('memory-search-input').value.toLowerCase().trim();
+    const container = document.getElementById('memory-list-container');
+    const filtered = allMemories.filter(m => m.text.toLowerCase().includes(query));
+    
+    if (filtered.length === 0) {
+      container.innerHTML = `<div style="font-size:11.5px; color:var(--text-2); padding:4px;">${query ? 'No matching memories found.' : 'No memories logged. Select Learner Specialist to ingest facts.'}</div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    filtered.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'memory-card';
+      card.style.cursor = 'pointer';
+      card.onclick = () => openInspector(m.memory_id);
+      
+      const importance = m.metadata?.importance || 'medium';
+      const impColor = importance === 'high' ? 'high' : 'med';
+      const specDot = m.specialist === 'learner' ? 'learning' : 'developer';
+
+      card.innerHTML = `
+        <div class="top-row">
+          <div class="fact">${m.text.substring(0, 65)}${m.text.length > 65 ? '...' : ''}</div>
+          <button class="btn-delete-mem" onclick="deleteMemory(event, '${m.memory_id}')" title="Delete memory">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+        <div class="meta-row">
+          <span class="src-tag"><span class="src-dot ${specDot}"></span>${m.specialist.toUpperCase()}</span>
+          <span class="confidence ${impColor}">${importance}</span>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // Central workspace updater
   async function updateWorkspace() {
     if (!activeSessionId) return;
 
     // 1. Fetch memories
     const memRes = await fetch('/api/memory');
-    const memories = await memRes.json();
+    allMemories = await memRes.json();
 
     // 2. Render Graph
-    renderGraph(memories);
+    renderGraph(allMemories);
 
-    // 3. Update header stats
-    document.getElementById('graph-stat').textContent = `Graph · ${memories.length} nodes · ${Math.max(0, memories.length - 1)} edges`;
+    // 3. Render Memory lists
+    filterAndRenderMemories();
 
-    // 4. Render Timeline
+    // 4. Update header stats
+    document.getElementById('graph-stat').textContent = `Graph · ${allMemories.length} nodes · ${Math.max(0, allMemories.length - 1)} edges`;
+
+    // 5. Render Timeline
     const timelineContainer = document.getElementById('timeline-container');
-    const sessMems = memories.filter(m => m.session_id === activeSessionId);
+    const sessMems = allMemories.filter(m => m.session_id === activeSessionId);
+    
     if (sessMems.length === 0) {
-      timelineContainer.innerHTML = '<div style="font-size:12px; color:var(--text-2);">Timeline is empty. Ingest knowledge to begin.</div>';
+      timelineContainer.innerHTML = `
+        <div class="timeline-wrap">
+          <div class="timeline-item session-created">
+            <div class="t-title">Session Instantiated</div>
+            <div class="t-sub">New workspace session initiated. Status: active.</div>
+            <div class="t-time">${new Date().toLocaleTimeString()}</div>
+          </div>
+        </div>
+      `;
     } else {
       timelineContainer.innerHTML = '';
       const wrap = document.createElement('div');
       wrap.classList.add('timeline-wrap');
-      sessMems.forEach(m => {
+
+      // Add session instantiated start event
+      const startItem = document.createElement('div');
+      startItem.className = 'timeline-item session-created';
+      startItem.innerHTML = `
+        <div class="t-title">Session Instantiated</div>
+        <div class="t-sub">Workspace session initiated for persistent graph traversal.</div>
+        <div class="t-time">Start</div>
+      `;
+      wrap.appendChild(startItem);
+
+      // Reverse list to show chronological order (earliest to latest)
+      const chronoMems = [...sessMems].reverse();
+
+      chronoMems.forEach(m => {
         const item = document.createElement('div');
-        item.classList.add('timeline-item');
         
-        const title = document.createElement('div');
-        title.classList.add('t-title');
-        title.textContent = m.specialist === 'learner' ? 'Learning · remember()' : 'Developer · recall()';
-
-        const sub = document.createElement('div');
-        sub.classList.add('t-sub');
-        sub.textContent = m.text;
-
-        const time = document.createElement('div');
-        time.classList.add('t-time');
-        time.textContent = m.created_at.substring(11, 19);
-
-        item.appendChild(title);
-        item.appendChild(sub);
-        item.appendChild(time);
+        if (m.specialist === 'learner') {
+          item.className = 'timeline-item remember';
+          item.innerHTML = `
+            <div class="t-title">Learning · remember()</div>
+            <div class="t-sub">Ingested fact: "${m.text}"</div>
+            <div class="t-time">${new Date(m.created_at).toLocaleTimeString()}</div>
+          `;
+        } else {
+          item.className = 'timeline-item recall';
+          item.innerHTML = `
+            <div class="t-title">Developer · recall()</div>
+            <div class="t-sub">Resolved query: "${m.metadata?.query || m.text.substring(0, 30)}"</div>
+            <div class="t-time">${new Date(m.created_at).toLocaleTimeString()}</div>
+          `;
+        }
         wrap.appendChild(item);
       });
+      
       timelineContainer.appendChild(wrap);
     }
   }
@@ -938,12 +1176,28 @@
     chatScroll.appendChild(uMsg);
     chatScroll.scrollTop = chatScroll.scrollHeight;
 
-    // Send backend request
+    // Send backend request & show multi-stage thinking logs
     const spinner = document.createElement('div');
     spinner.className = 'msg ai shallow';
-    spinner.innerHTML = `<div class="msg-bubble"><span class="spinner"></span> Thinking...</div>`;
+    
+    // Initial State: Thinking
+    spinner.innerHTML = `<div class="msg-bubble" style="display:flex; align-items:center; gap:8px;"><span class="spinner"></span> <span id="pipeline-status-text">Searching Memory Graph...</span></div>`;
     chatScroll.appendChild(spinner);
     chatScroll.scrollTop = chatScroll.scrollHeight;
+
+    // Simulate multi-stage cognitive tracing in UI
+    setTimeout(() => {
+      const el = document.getElementById('pipeline-status-text');
+      if (el) el.textContent = 'Ranking Retrieved Context...';
+    }, 600);
+    setTimeout(() => {
+      const el = document.getElementById('pipeline-status-text');
+      if (el) el.textContent = 'Applying Cognee Shared Memory...';
+    }, 1200);
+    setTimeout(() => {
+      const el = document.getElementById('pipeline-status-text');
+      if (el) el.textContent = 'Reasoning via Groq...';
+    }, 1800);
 
     let res;
     if (activeSpecialist === 'learning') {
@@ -1085,6 +1339,14 @@
       const isMemory = tab.dataset.tab === 'memory';
       document.getElementById('panel-memory').style.display = isMemory ? 'block' : 'none';
       document.getElementById('panel-timeline').style.display = isMemory ? 'none' : 'block';
+    });
+  });
+
+  // Handle Projects, Settings, Research, and Planner Click
+  document.querySelectorAll('.nav-item.disabled, .specialist-pill.locked').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('Coming Soon: This module is scheduled for Milestone 6.');
     });
   });
 
