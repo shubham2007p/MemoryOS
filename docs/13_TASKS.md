@@ -26,3 +26,9 @@
 - [x] 024 Consolidation feedback logs
 - [x] 025 Interactive Memory Timeline & Context panels
 - [x] 026 Milestone 4 Verification & Testing
+- [x] 027 Milestone 5 — Single-Page HTML Production UI serving from FastAPI
+- [x] 028 Connect memory list, inspector modal, search, and delete APIs to UI
+- [x] 029 Add multi-stage cognitive tracing simulation inside chat workspace
+- [ ] 030 Milestone 6 — Scale (Planner & Research Specialist reasoning integrations)
+- [ ] 031 Milestone 6 — Multi-project memory scoping & full graph browser expansion
+
