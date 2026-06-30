@@ -147,6 +147,42 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
+        /* Markdown Typography overrides */
+        .prose code {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #ec4899; /* Pink-500 */
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 85%;
+        }
+        .dark .prose code {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #f472b6; /* Pink-400 */
+        }
+        .prose pre {
+            background-color: #1e1e1e !important;
+            color: #d4d4d4 !important;
+            padding: 1.2rem !important;
+            border-radius: 8px !important;
+            overflow-x: auto;
+        }
+        .prose pre code {
+            background-color: transparent !important;
+            color: inherit !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            font-size: 90%;
+        }
+        
+        /* High contrast colors for text-secondary equivalents */
+        .text-secondary {
+            color: #4b5563 !important; /* Tailwind gray-600 */
+        }
+        .dark .text-secondary {
+            color: #9ca3af !important; /* Tailwind gray-400 */
+        }
     </style>
 </head>
 
@@ -159,7 +195,7 @@
                     View</span>
                 <span class="text-[10px] font-mono opacity-60" id="overlay-graph-stats">Loading Nodes & Edges...</span>
             </div>
-            <button class="text-secondary hover:text-os-ink transition-colors"
+            <button class="text-secondary hover:text-os-ink transition-colors" aria-label="Close global graph view"
                 onclick="closeNodeDetails(); document.getElementById('graph-overlay').classList.add('hidden')">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                     <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
@@ -178,7 +214,7 @@
             <div class="hidden w-full lg:w-2/5 h-full border-l border-os-border bg-os-surface flex-col p-8 overflow-y-auto transition-all duration-300" id="node-details-panel">
                 <div class="flex items-center justify-between mb-8 border-b border-os-border pb-4">
                     <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Node Inspector</span>
-                    <button class="text-secondary hover:text-os-ink transition-colors flex items-center justify-center" onclick="closeNodeDetails()">
+                    <button class="text-secondary hover:text-os-ink transition-colors flex items-center justify-center" onclick="closeNodeDetails()" aria-label="Close node inspector">
                         <span class="material-symbols-outlined text-[18px]">close</span>
                     </button>
                 </div>
@@ -197,7 +233,7 @@
                 <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Permanent Knowledge Graph</span>
                 <span class="text-[10px] font-mono opacity-60" id="permanent-graph-stats">Loading Nodes & Edges...</span>
             </div>
-            <button class="text-secondary hover:text-os-ink transition-colors"
+            <button class="text-secondary hover:text-os-ink transition-colors" aria-label="Close permanent knowledge graph view"
                 onclick="closePermanentNodeDetails(); document.getElementById('permanent-graph-overlay').classList.add('hidden')">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                     <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
@@ -216,7 +252,7 @@
             <div class="hidden w-full lg:w-2/5 h-full border-l border-os-border bg-os-surface flex-col p-8 overflow-y-auto transition-all duration-300" id="permanent-node-details-panel">
                 <div class="flex items-center justify-between mb-8 border-b border-os-border pb-4">
                     <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Node Inspector</span>
-                    <button class="text-secondary hover:text-os-ink transition-colors flex items-center justify-center" onclick="closePermanentNodeDetails()">
+                    <button class="text-secondary hover:text-os-ink transition-colors flex items-center justify-center" onclick="closePermanentNodeDetails()" aria-label="Close permanent node inspector">
                         <span class="material-symbols-outlined text-[18px]">close</span>
                     </button>
                 </div>
@@ -249,7 +285,7 @@
                 <div id="session-list" class="space-y-1.5 overflow-y-auto mb-4 scrollbar-none flex-1 max-h-[220px]">
                     <!-- Sessions populated dynamically -->
                 </div>
-                <button id="btn-new-session"
+                <button id="btn-new-session" aria-label="Create new session"
                     class="w-full py-2 bg-os-ink hover:opacity-90 text-os-surface rounded-full text-[12px] font-medium transition-all flex items-center justify-center gap-2 border border-os-ink shadow-sm flex-shrink-0">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                         <path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -360,7 +396,7 @@
                     <span id="header-graph-stats">Loading...</span>
                 </div>
                 <div class="flex items-center gap-6">
-                    <button
+                    <button aria-label="Toggle light and dark theme"
                         class="flex items-center gap-2 bg-os-surface border border-os-border px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest-plus hover:bg-os-border/20 transition-all"
                         onclick="toggleTheme()">
                         <span class="material-symbols-outlined text-[16px]" id="theme-icon">dark_mode</span>
@@ -458,7 +494,7 @@
                     <div class="flex flex-wrap items-center gap-3 mb-4 hidden" id="preview-container">
                         <!-- Will be populated dynamically -->
                     </div>
-                    <button
+                    <button aria-label="Attach file or search web"
                         class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary hover:text-os-ink transition-colors flex items-center justify-center z-10"
                         id="clip-btn" title="Attach file">
                         <span class="material-symbols-outlined text-[20px]">attach_file</span>
@@ -467,7 +503,7 @@
                         class="w-full bg-os-bg border border-os-border rounded-full pr-40 py-4 text-os-ink text-[14px] placeholder:opacity-50 focus:border-os-ink/20 focus:ring-0 transition-all outline-none pl-12"
                         id="chat-input" placeholder="Ask Developer anything it remembers..." type="text" />
                     <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-3">
-                        <button id="btn-run-improve"
+                        <button id="btn-run-improve" aria-label="Run memory consolidation and improvements"
                             class="flex items-center gap-2 bg-os-surface hover:bg-os-border/20 px-4 py-2 rounded-full text-[10px] font-mono text-os-ink transition-colors border border-os-border tracking-tight">
                             <svg class="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                                 <path
@@ -476,7 +512,7 @@
                             </svg>
                             Run improve()
                         </button>
-                        <button id="btn-send-message"
+                        <button id="btn-send-message" aria-label="Send message"
                             class="w-10 h-10 bg-os-ink hover:opacity-90 flex items-center justify-center rounded-full transition-all text-os-surface shadow-lg">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                                 <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"
@@ -501,7 +537,7 @@
                     <div class="flex items-center justify-between mb-5">
                         <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Context
                             Neighborhood</span>
-                        <button
+                        <button aria-label="Expand knowledge graph overlay"
                             class="text-[10px] font-mono text-secondary flex items-center gap-1.5 hover:text-os-ink transition-colors"
                             onclick="document.getElementById('graph-overlay').classList.remove('hidden')">
                             Expand
@@ -518,7 +554,7 @@
                             <!-- Injected SVG -->
                         </div>
                     </div>
-                    <button id="btn-promote-permanent"
+                    <button id="btn-promote-permanent" aria-label="Promote session graph to permanent graph"
                         class="w-full mt-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-mono font-medium transition-all flex items-center justify-center gap-2 shadow-sm"
                         onclick="promoteSessionToPermanent()">
                         <span class="material-symbols-outlined text-[14px]">auto_awesome</span>
@@ -710,7 +746,7 @@
                         const shortId = sess.session_id.substring(0, 8).toUpperCase();
                         sessItem.innerHTML = `
                             <span class="truncate flex-1" onclick="selectSession('${sess.session_id}')">Sess-${shortId}</span>
-                            <button class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 ml-2 transition-opacity p-0.5" onclick="handleDeleteSession(event, '${sess.session_id}')" title="Delete Session">
+                            <button class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 ml-2 transition-opacity p-0.5" onclick="handleDeleteSession(event, '${sess.session_id}')" title="Delete Session" aria-label="Delete Session">
                                 <span class="material-symbols-outlined text-[14px]">delete</span>
                             </button>
                         `;
@@ -991,7 +1027,7 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-3">
                         <h4 class="text-[11.5px] font-medium font-mono leading-relaxed text-os-ink">${mem.text}</h4>
-                        <button class="text-secondary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity delete-mem-btn" data-id="${mem.memory_id}">
+                        <button class="text-secondary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity delete-mem-btn" data-id="${mem.memory_id}" aria-label="Delete memory entry">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                                 <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                     stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -1541,13 +1577,16 @@
 
             nodes.forEach(node => {
                 let isDragging = false;
+                let draggedOccurred = false;
                 let dragStartMouseX, dragStartMouseY;
                 let dragStartNodeX, dragStartNodeY;
                 const nodeId = node.getAttribute('data-id');
+                const DRAG_THRESHOLD = 5;
 
                 node.addEventListener('mousedown', (e) => {
                     e.stopPropagation();
                     isDragging = true;
+                    draggedOccurred = false;
                     dragStartMouseX = e.clientX;
                     dragStartMouseY = e.clientY;
                     const pos = nodePositions.get(nodeId);
@@ -1558,11 +1597,22 @@
                     node.style.cursor = 'grabbing';
                 });
 
+                node.addEventListener('click', (e) => {
+                    if (draggedOccurred) {
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+                    }
+                }, true);
+
                 window.addEventListener('mousemove', (e) => {
                     if (isDragging) {
                         const dx = e.clientX - dragStartMouseX;
                         const dy = e.clientY - dragStartMouseY;
                         
+                        if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+                            draggedOccurred = true;
+                        }
+
                         const rect = svg.getBoundingClientRect();
                         const scaleX = viewBox.width / rect.width;
                         const scaleY = viewBox.height / rect.height;
