@@ -7,7 +7,7 @@ and memory improvement, and handles database migrations on startup.
 import logging
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -258,7 +258,7 @@ def delete_memory_log(memory_id: str) -> Dict[str, str]:
     return {"status": "deleted"}
 
 @app.post("/api/memory/improve")
-async def run_improve(session_ids: Optional[List[str]] = None) -> Dict[str, Any]:
+async def run_improve(session_ids: Optional[List[str]] = Body(None)) -> Dict[str, Any]:
     """Trigger memory consolidation for the specified sessions."""
     try:
         result = await improve_memory(session_ids=session_ids)

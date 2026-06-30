@@ -688,14 +688,26 @@
       <span id="graph-stat">Graph · 0 nodes · 0 edges</span>
     </div>
     <div class="topbar-right">
-      <select id="session-select" style="background: var(--bg-1); color: var(--text-0); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;"></select>
-      <button id="btn-new-session" style="background: var(--accent); color: var(--bg-0); border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer;">+ New Session</button>
-      <button id="btn-delete-session" style="background: transparent; color: var(--text-2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;">Delete Session</button>
+      <!-- Session controls moved to Left Nav -->
+      <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-2);">Active Session Workspace</span>
     </div>
   </div>
 
   <!-- LEFT NAV -->
   <div class="nav">
+    <div class="nav-section-label" style="padding-top:0; display:flex; justify-content:space-between; align-items:center;">
+      <span>Sessions</span>
+      <span style="font-size:9px; font-family:var(--font-mono); color:var(--accent);" id="active-session-indicator">None</span>
+    </div>
+    <button id="btn-new-session" style="width:100%; background:var(--accent); color:var(--bg-0); border:none; border-radius:var(--radius-sm); padding:8px 12px; font-size:12px; font-weight:600; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      New Session
+    </button>
+    
+    <div id="sessions-list-container" style="display:flex; flex-direction:column; gap:4px; max-height:220px; overflow-y:auto; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+      <!-- Dynamic session items list with select and delete buttons -->
+    </div>
+
     <div class="nav-section-label">Navigate</div>
     <div class="nav-item active" data-nav="workspace">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
@@ -874,61 +886,118 @@
   async function loadSessions() {
     const res = await fetch('/api/sessions');
     const sessions = await res.json();
-    const select = document.getElementById('session-select');
-    select.innerHTML = '';
+    const container = document.getElementById('sessions-list-container');
+    container.innerHTML = '';
     
     if (sessions.length === 0) {
       // Auto create a session
       const createRes = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metadata: { name: 'Autostart Session' } })
+        body: JSON.stringify({ metadata: { name: 'Workspace Session' } })
       });
       const newSess = await createRes.json();
       activeSessionId = newSess.session_id;
-      const opt = document.createElement('option');
-      opt.value = activeSessionId;
-      opt.textContent = `Session (${activeSessionId.substring(0, 8)})`;
-      select.appendChild(opt);
     } else {
-      sessions.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.session_id;
-        opt.textContent = `Session (${s.session_id.substring(0, 8)})`;
-        select.appendChild(opt);
-      });
-      activeSessionId = sessions[0].session_id;
+      const exists = sessions.some(s => s.session_id === activeSessionId);
+      if (!exists) {
+        activeSessionId = sessions[0].session_id;
+      }
     }
     
-    select.value = activeSessionId;
+    document.getElementById('active-session-indicator').textContent = activeSessionId ? activeSessionId.substring(0, 6).toUpperCase() : 'NONE';
+    
+    sessions.forEach(s => {
+      const item = document.createElement('div');
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
+      item.style.justifyContent = 'space-between';
+      item.style.padding = '8px 10px';
+      item.style.borderRadius = 'var(--radius-sm)';
+      item.style.fontSize = '12px';
+      item.style.cursor = 'pointer';
+      item.style.transition = 'all 0.15s var(--ease)';
+      item.style.marginBottom = '2px';
+      
+      const isSelected = s.session_id === activeSessionId;
+      if (isSelected) {
+        item.style.background = 'var(--bg-3)';
+        item.style.color = 'var(--text-0)';
+        item.style.border = '1px solid var(--border-strong)';
+      } else {
+        item.style.background = 'transparent';
+        item.style.color = 'var(--text-1)';
+        item.style.border = '1px solid transparent';
+      }
+      
+      item.addEventListener('mouseenter', () => {
+        if (!isSelected) {
+          item.style.background = 'var(--bg-2)';
+          item.style.color = 'var(--text-0)';
+        }
+      });
+      
+      item.addEventListener('mouseleave', () => {
+        if (!isSelected) {
+          item.style.background = 'transparent';
+          item.style.color = 'var(--text-1)';
+        }
+      });
+      
+      const selectWrapper = document.createElement('div');
+      selectWrapper.style.display = 'flex';
+      selectWrapper.style.alignItems = 'center';
+      selectWrapper.style.gap = '8px';
+      selectWrapper.style.flex = '1';
+      selectWrapper.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.75;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>${s.metadata?.name || 'Session (' + s.session_id.substring(0, 6) + ')'}</span>
+      `;
+      selectWrapper.onclick = () => {
+        activeSessionId = s.session_id;
+        loadSessions();
+      };
+      item.appendChild(selectWrapper);
+      
+      const delBtn = document.createElement('button');
+      delBtn.style.background = 'transparent';
+      delBtn.style.border = 'none';
+      delBtn.style.color = 'var(--text-2)';
+      delBtn.style.cursor = 'pointer';
+      delBtn.style.padding = '2px';
+      delBtn.style.display = 'flex';
+      delBtn.style.alignItems = 'center';
+      delBtn.style.justifyContent = 'center';
+      delBtn.innerHTML = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      delBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (confirm('Delete this session context?')) {
+          const delRes = await fetch(`/api/sessions/${s.session_id}`, { method: 'DELETE' });
+          if (delRes.ok) {
+            if (activeSessionId === s.session_id) {
+              activeSessionId = '';
+            }
+            loadSessions();
+          }
+        }
+      };
+      item.appendChild(delBtn);
+      
+      container.appendChild(item);
+    });
+    
     updateWorkspace();
   }
-
-  // Bind session switcher
-  document.getElementById('session-select').addEventListener('change', (e) => {
-    activeSessionId = e.target.value;
-    updateWorkspace();
-  });
-
+ 
   // Bind new session button
   document.getElementById('btn-new-session').addEventListener('click', async () => {
     const res = await fetch('/api/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ metadata: { name: 'Interactive Session' } })
+      body: JSON.stringify({ metadata: { name: 'Session (' + Math.random().toString(36).substring(7).toUpperCase() + ')' } })
     });
     if (res.ok) {
       await loadSessions();
-    }
-  });
-
-  // Delete session button
-  document.getElementById('btn-delete-session').addEventListener('click', async () => {
-    if (activeSessionId) {
-      const res = await fetch(`/api/sessions/${activeSessionId}`, { method: 'DELETE' });
-      if (res.ok) {
-        await loadSessions();
-      }
     }
   });
 
