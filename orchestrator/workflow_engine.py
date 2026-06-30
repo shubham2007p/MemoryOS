@@ -106,6 +106,40 @@ class WorkflowEngine:
         )
         return result
 
+    async def execute_planner_flow(self, session_id: str, query: str) -> Dict[str, Any]:
+        """Execute the Planner Specialist workflow: Recall and generate structured roadmap."""
+        logger.info(f"Running planner flow for session {session_id}")
+        session = self.session_manager.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+
+        from specialists.planner.workflow import PlannerSpecialist
+        planner = PlannerSpecialist()
+        result = await planner.generate_plan(query, session_id=session_id)
+
+        self.session_manager.update_session(
+            session_id,
+            metadata={"last_query": query, "last_specialist": "planner"}
+        )
+        return result
+
+    async def execute_researcher_flow(self, session_id: str, query: str) -> Dict[str, Any]:
+        """Execute the Researcher Specialist workflow: Recall and synthesize conceptual research."""
+        logger.info(f"Running researcher flow for session {session_id}")
+        session = self.session_manager.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+
+        from specialists.researcher.workflow import ResearcherSpecialist
+        researcher = ResearcherSpecialist()
+        result = await researcher.run_research(query, session_id=session_id)
+
+        self.session_manager.update_session(
+            session_id,
+            metadata={"last_query": query, "last_specialist": "researcher"}
+        )
+        return result
+
     async def complete_session(self, session_id: str) -> Dict[str, Any]:
         """Complete the session, transitioning status and triggering consolidation.
 

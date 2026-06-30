@@ -723,15 +723,15 @@
         <span class="label">Learning</span>
         <span class="sub">live</span>
       </div>
-      <div class="specialist-pill locked">
+      <div class="specialist-pill" data-specialist="researcher">
         <span class="ring"></span>
         <span class="label">Research</span>
-        <span class="sub">soon</span>
+        <span class="sub">live</span>
       </div>
-      <div class="specialist-pill locked">
+      <div class="specialist-pill" data-specialist="planner">
         <span class="ring"></span>
         <span class="label">Planner</span>
-        <span class="sub">soon</span>
+        <span class="sub">live</span>
       </div>
     </div>
   </div>
@@ -925,7 +925,7 @@
   const goalExtra = document.getElementById('goal-extra');
   const compInput = document.getElementById('composer-input');
 
-  document.querySelectorAll('.specialist-pill:not(.locked)').forEach(pill => {
+  document.querySelectorAll('.specialist-pill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.specialist-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
@@ -936,6 +936,16 @@
         headerTitle.textContent = 'Learning reasons over the shared graph';
         goalExtra.textContent = 'implementation context from Developer';
         compInput.placeholder = 'Enter new facts to remember...';
+      } else if (activeSpecialist === 'researcher') {
+        crumbName.textContent = 'RESEARCH';
+        headerTitle.textContent = 'Research Specialist analyzes concepts deeply';
+        goalExtra.textContent = 'cross-domain connections and references';
+        compInput.placeholder = 'Enter a topic to research deeply...';
+      } else if (activeSpecialist === 'planner') {
+        crumbName.textContent = 'PLANNER';
+        headerTitle.textContent = 'Planner Specialist designs roadmap plans';
+        goalExtra.textContent = 'step-by-step checklists and dependencies';
+        compInput.placeholder = 'Enter a goal to plan roadmap step checklist...';
       } else {
         crumbName.textContent = 'DEVELOPER';
         headerTitle.textContent = 'Developer reasons over the shared graph';
@@ -1206,6 +1216,18 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: activeSessionId, text: text })
       });
+    } else if (activeSpecialist === 'researcher') {
+      res = await fetch('/api/specialists/researcher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: activeSessionId, query: text })
+      });
+    } else if (activeSpecialist === 'planner') {
+      res = await fetch('/api/specialists/planner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: activeSessionId, query: text })
+      });
     } else {
       res = await fetch('/api/specialists/developer', {
         method: 'POST',
@@ -1342,8 +1364,8 @@
     });
   });
 
-  // Handle Projects, Settings, Research, and Planner Click
-  document.querySelectorAll('.nav-item.disabled, .specialist-pill.locked').forEach(el => {
+  // Handle Projects and Settings Click
+  document.querySelectorAll('.nav-item.disabled').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
       alert('Coming Soon: This module is scheduled for Milestone 6.');

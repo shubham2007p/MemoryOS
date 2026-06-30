@@ -204,6 +204,32 @@ async def run_developer(request: QueryRequest) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/specialists/planner")
+async def run_planner(request: QueryRequest) -> Dict[str, Any]:
+    """Execute Planner Specialist workflow to retrieve memory and generate roadmaps."""
+    try:
+        return await workflow_engine.execute_planner_flow(
+            session_id=request.session_id,
+            query=request.query
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/specialists/researcher")
+async def run_researcher(request: QueryRequest) -> Dict[str, Any]:
+    """Execute Researcher Specialist workflow to recall concepts and synthesize summaries."""
+    try:
+        return await workflow_engine.execute_researcher_flow(
+            session_id=request.session_id,
+            query=request.query
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Memory operations endpoints
 @app.get("/api/memory")
 def get_memories(session_id: Optional[str] = None, q: Optional[str] = None) -> List[Dict[str, Any]]:
