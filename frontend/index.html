@@ -1,1612 +1,1704 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html class="h-full" lang="en" style="">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MemoryOS</title>
-<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-<style>
-  :root{
-    --bg-0: #0A0B0E;
-    --bg-1: #111319;
-    --bg-2: #161922;
-    --bg-3: #1C2029;
-    --border: rgba(255,255,255,0.07);
-    --border-strong: rgba(255,255,255,0.14);
-    --text-0: #F2F3F5;
-    --text-1: #A8ADB8;
-    --text-2: #6E7380;
-    --accent: #4D8DFF;
-    --accent-glow: rgba(77,141,255,0.35);
-    --purple: #9B7CFF;
-    --emerald: #34D399;
-    --amber: #F2B544;
-    --font-display: 'Söhne', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 18px;
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  }
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>MemoryOS - Developer Workspace</title>
+    <!-- Tailwind CSS v3 with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries,typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Import Required Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "os-border": "var(--border-color)",
+                        "os-surface": "var(--surface-color)",
+                        "os-bg": "var(--bg-color)",
+                        "os-ink": "var(--ink-color)",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "surface-container": "var(--surface-container)",
+                        "surface-container-high": "var(--surface-container-high)",
+                        "surface-container-low": "var(--surface-container-low)",
+                        "secondary": "#71717a",
+                        "outline-variant": "var(--border-color)",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "32px",
+                        "3xl": "32px",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        heading: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    letterSpacing: {
+                        'technical': '0.075em',
+                        'widest-plus': '0.15em',
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --bg-color: #f9f9f9;
+            --surface-color: #ffffff;
+            --ink-color: #000000;
+            --border-color: #e2e2e2;
+            --surface-container: #f3f3f3;
+            --surface-container-high: #ebebeb;
+            --surface-container-low: #f9f9f9;
+            --graph-grid: #e2e2e2;
+        }
 
-  * { box-sizing: border-box; }
-  html, body { margin: 0 !important; padding: 0 !important; height: 100vh; width: 100vw; overflow: hidden !important; }
-  body{
-    background: var(--bg-0);
-    color: var(--text-0);
-    font-family: var(--font-body);
-    -webkit-font-smoothing: antialiased;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden !important;
-    background-image:
-      radial-gradient(circle at 15% 0%, rgba(77,141,255,0.06), transparent 45%),
-      radial-gradient(circle at 85% 100%, rgba(155,124,255,0.05), transparent 45%);
-  }
+        .dark {
+            --bg-color: #121414;
+            --surface-color: #0c0f0f;
+            --ink-color: #ffffff;
+            --border-color: #262626;
+            --surface-container: #1a1c1c;
+            --surface-container-high: #202222;
+            --surface-container-low: #0e1111;
+            --graph-grid: #262626;
+        }
 
-  ::selection { background: var(--accent-glow); }
-  *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--ink-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
 
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
 
-  /* ============ APP SHELL ============ */
-  .app{
-    display: grid;
-    grid-template-columns: 248px 1fr 320px;
-    grid-template-rows: 56px 1fr;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden !important;
-  }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
 
-  /* ============ TOP BAR ============ */
-  .topbar{
-    grid-column: 1 / 4;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border);
-    background: rgba(10,11,14,0.6);
-    backdrop-filter: blur(20px);
-    position: relative;
-    z-index: 20;
-  }
-  .brand{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 14.5px;
-    letter-spacing: -0.01em;
-  }
-  .brand-mark{
-    width: 20px; height: 20px;
-    border-radius: 6px;
-    background: radial-gradient(circle at 35% 30%, var(--accent), #2255CC 70%);
-    box-shadow: 0 0 14px var(--accent-glow);
-    position: relative;
-  }
-  .brand-mark::after{
-    content: '';
-    position: absolute; inset: 5px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.85);
-    filter: blur(0.5px);
-  }
-  .topbar-center{
-    display:flex; align-items:center; gap: 6px;
-    font-size: 13px; color: var(--text-2);
-    font-family: var(--font-mono);
-  }
-  .topbar-center .dot{ width:5px; height:5px; border-radius:50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
-  .topbar-right{ display:flex; align-items:center; gap:12px; }
-  .icon-btn{
-    width: 32px; height: 32px;
-    border-radius: var(--radius-sm);
-    display:flex; align-items:center; justify-content:center;
-    color: var(--text-1);
-    background: transparent;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all .15s var(--ease);
-  }
-  .icon-btn:hover{ background: var(--bg-2); border-color: var(--border); color: var(--text-0); }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
 
-  /* ============ LEFT NAV ============ */
-  .nav{
-    border-right: 1px solid var(--border);
-    padding: 16px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    overflow-y: auto;
-  }
-  .nav-section-label{
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-2);
-    padding: 14px 10px 6px;
-    font-weight: 600;
-  }
-  .nav-item{
-    display:flex; align-items:center; gap: 10px;
-    padding: 8px 10px;
-    border-radius: var(--radius-sm);
-    color: var(--text-1);
-    font-size: 13.5px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all .15s var(--ease);
-    position: relative;
-  }
-  .nav-item svg{ width:16px; height:16px; opacity:0.85; flex-shrink:0; }
-  .nav-item:hover{ background: var(--bg-2); color: var(--text-0); }
-  .nav-item.active{ background: var(--bg-3); color: var(--text-0); }
+        .graph-node {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
 
-  /* ============ SPECIALISTS BLOCK ============ */
-  .specialist-block{
-    margin-top: auto;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .specialist-pill{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: var(--radius-md);
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all .2s var(--ease);
-  }
-  .specialist-pill:hover{ border-color: var(--border-strong); }
-  .specialist-pill.active{
-    border-color: var(--accent);
-    background: linear-gradient(135deg, rgba(77,141,255,0.08) 0%, rgba(155,124,255,0.04) 100%);
-  }
-  .specialist-pill.locked{ opacity: 0.45; cursor: not-allowed; }
-  .specialist-pill .ring{
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    border: 2px solid var(--text-2);
-    transition: all .2s var(--ease);
-  }
-  .specialist-pill.active .ring{
-    border-color: var(--accent);
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent);
-  }
-  .specialist-pill .label{ font-[13.5px]; font-weight: 600; color: var(--text-0); }
-  .specialist-pill .sub{ font-size:10.5px; font-family: var(--font-mono); color: var(--text-2); margin-left: auto; }
-  .future-tag{
-    font-size: 8.5px;
-    font-family: var(--font-mono);
-    color: var(--purple);
-    background: rgba(155,124,255,0.15);
-    padding: 1px 4px;
-    border-radius: 4px;
-    margin-left: auto;
-    font-weight: 600;
-  }
+        .graph-edge {
+            stroke: currentColor;
+            stroke-opacity: 0.1;
+            stroke-width: 1;
+            transition: opacity 0.3s ease;
+        }
 
-  /* ============ MAIN WORKSPACE ============ */
-  .workspace{
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    background: rgba(10,11,14,0.2);
-    height: 100%;
-    overflow: hidden;
-  }
-  .workspace-header{
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-  }
-  .workspace-header .crumb{
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    color: var(--text-2);
-    margin-bottom: 6px;
-  }
-  .workspace-header h1{
-    margin: 0;
-    font-size: 19px;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    color: var(--text-0);
-  }
-  .workspace-header .goal{
-    margin-top: 6px;
-    font-size: 12.5px;
-    color: var(--text-1);
-  }
+        .graph-edge-active {
+            stroke: currentColor;
+            stroke-opacity: 0.3;
+            stroke-width: 1.5;
+            transition: opacity 0.3s ease;
+        }
 
-  /* ============ CHAT AREA ============ */
-  .chat-scroll{
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  .msg{
-    display: flex;
-    flex-direction: column;
-    max-width: 85%;
-  }
-  .msg.user{ align-self: flex-end; }
-  .msg.ai{ align-self: flex-start; }
-  .msg-bubble{
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    font-size: 13.8px;
-    line-height: 1.5;
-  }
-  .msg.user .msg-bubble{
-    background: var(--bg-3);
-    color: var(--text-0);
-    border-bottom-right-radius: 4px;
-    border: 1px solid var(--border-strong);
-  }
-  .msg.ai .msg-bubble{
-    background: var(--bg-1);
-    color: var(--text-0);
-    border-bottom-left-radius: 4px;
-    border: 1px solid var(--border);
-  }
-  .msg.ai.shallow{ border-left: 3px solid var(--amber); }
-  .msg.ai.deep{ border-left: 3px solid var(--accent); }
+        #graph-container:hover .graph-node {
+            opacity: 0.3;
+        }
 
-  .recall-trace{
-    display: flex;
-    gap: 6px;
-    margin-top: 6px;
-    align-self: flex-start;
-  }
-  .recall-chip{
-    font-family: var(--font-mono);
-    font-size: 9.5px;
-    color: var(--text-2);
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    padding: 2px 8px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .hop-dot{ width: 4px; height: 4px; border-radius:50%; background: var(--purple); }
+        #graph-container:hover .graph-edge,
+        #graph-container:hover .graph-edge-active {
+            opacity: 0.1;
+        }
 
-  .msg-meta{
-    font-family: var(--font-mono);
-    font-size: 9.5px;
-    color: var(--text-2);
-    margin-top: 2px;
-  }
+        #graph-container .graph-node:hover {
+            opacity: 1 !important;
+            transform: scale(1.4);
+            filter: drop-shadow(0 0 8px rgba(128, 128, 128, 0.2));
+        }
 
-  /* ============ IMPROVE BANNER ============ */
-  .improve-banner{
-    background: linear-gradient(135deg, rgba(77,141,255,0.06) 0%, rgba(155,124,255,0.03) 100%);
-    border: 1px dashed var(--accent-glow);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin: 10px 0;
-  }
-  .improve-banner .title{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    font-weight: 600;
-  }
-  .improve-progress{
-    height: 3px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .improve-progress-fill{
-    height: 100%;
-    width: 0%;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent);
-    transition: width 2s ease;
-  }
-  .improve-stats{
-    display: flex;
-    gap: 24px;
-  }
-  .improve-stat{
-    display: flex;
-    flex-direction: column;
-    opacity: 0.15;
-    transition: opacity .4s ease;
-  }
-  .improve-stat.show{ opacity: 1; }
-  .improve-stat .num{ font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--accent); }
-  .improve-stat .lbl{ font-size: 11px; color: var(--text-1); margin-top: 2px; }
-  .improve-done{
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--emerald);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .improve-done.show{ opacity: 1; }
+        .attachment-menu {
+            transform-origin: bottom left;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-  .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid rgba(77,141,255,0.25);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+        .attachment-menu.hidden {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            pointer-events: none;
+        }
 
-  /* ============ COMPOSER ============ */
-  .composer{
-    padding: 16px 24px 20px;
-    border-top: 1px solid var(--border);
-  }
-  .composer-bar{
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    padding: 8px 10px;
-    gap: 12px;
-    transition: all .2s var(--ease);
-  }
-  .composer-bar:focus-within{ border-color: var(--accent); box-shadow: 0 0 12px rgba(77,141,255,0.1); }
-  .composer-bar input{
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text-0);
-    font-size: 13.8px;
-    padding: 6px 4px;
-  }
-  .composer-bar input::placeholder{ color: var(--text-2); }
-  .composer-actions{
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .btn-improve{
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(155,124,255,0.08);
-    border: 1px solid rgba(155,124,255,0.15);
-    color: var(--purple);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all .15s var(--ease);
-  }
-  .btn-improve:hover{ background: rgba(155,124,255,0.15); border-color: rgba(155,124,255,0.3); }
-  .btn-send{
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    background: var(--accent);
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform .1s;
-  }
-  .btn-send:active{ transform: scale(0.95); }
-  .composer-hint{
-    font-size: 10px;
-    color: var(--text-2);
-    margin-top: 8px;
-    padding-left: 4px;
-  }
-
-  /* ============ RIGHT PANEL ============ */
-  .memory-panel{
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-0);
-    height: 100%;
-    overflow: hidden;
-  }
-  .panel-tabs{
-    display: flex;
-    border-bottom: 1px solid var(--border);
-    padding: 0 16px;
-    height: 56px;
-    align-items: center;
-    gap: 16px;
-  }
-  .panel-tab{
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-2);
-    cursor: pointer;
-    padding: 18px 4px;
-    position: relative;
-    transition: color .15s;
-  }
-  .panel-tab:hover{ color: var(--text-0); }
-  .panel-tab.active{ color: var(--text-0); }
-  .panel-tab.active::after{
-    content: '';
-    position: absolute; bottom: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent);
-    border-radius: 2px 2px 0 0;
-  }
-  .panel-body{
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-  }
-
-  .graph-frame{
-    height: 220px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: rgba(255,255,255,0.01);
-    position: relative;
-    margin-bottom: 24px;
-    overflow: hidden;
-  }
-  .graph-frame svg{ width:100%; height:100%; }
-  .graph-node { cursor:pointer; }
-  .graph-node:hover { stroke: #FFF; stroke-width: 1.5; }
-  .graph-frame line { stroke: rgba(255,255,255,0.08); }
-  .graph-expand{
-    position: absolute; right: 12px; top: 12px;
-    font-size: 10.5px; color: var(--text-2);
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .graph-expand:hover{ color: var(--text-0); }
-  .graph-label{
-    position: absolute; left: 12px; top: 12px;
-    font-size: 9.5px; font-family: var(--font-mono);
-    color: var(--text-2);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .memory-section-title{
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-2);
-    margin-bottom: 12px;
-    font-weight: 600;
-  }
-  .memory-card{
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 14px 16px;
-    margin-bottom: 12px;
-    position: relative;
-  }
-  .memory-card .top-row{ display:flex; justify-content:space-between; gap:10px; }
-  .memory-card .fact{ font-size: 12.8px; line-height: 1.45; color: var(--text-0); font-weight: 500; }
-  .memory-card .confidence{
-    font-family: var(--font-mono);
-    font-size: 9.5px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    height: fit-content;
-  }
-  .confidence.high{ color: var(--emerald); background: rgba(52,211,153,0.12); }
-  .confidence.med{ color: var(--amber); background: rgba(242,181,68,0.12); }
-
-  .memory-card .meta-row{
-    display:flex; align-items:center; gap:10px;
-    margin-top: 8px;
-    font-size: 10px;
-    color: var(--text-2);
-    font-family: var(--font-mono);
-  }
-  .meta-row .src-tag{
-    display:flex; align-items:center; gap:4px;
-    padding: 2px 6px;
-    border-radius: 6px;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-  }
-  .meta-row .src-dot{ width:5px; height:5px; border-radius:50%; }
-  .src-dot.learning{ background: var(--purple); }
-  .src-dot.developer{ background: var(--accent); }
-
-  /* ============ TIMELINE TAB ============ */
-  .timeline-wrap{ position: relative; padding-left: 18px; }
-  .timeline-wrap::before{
-    content:'';
-    position:absolute; left: 5px; top: 4px; bottom: 4px;
-    width: 1px;
-    background: linear-gradient(to bottom, var(--border-strong), transparent);
-  }
-  .timeline-item{ position: relative; padding-bottom: 22px; }
-  .timeline-item::before{
-    content:'';
-    position: absolute; left: -18px; top: 2px;
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    background: var(--bg-0);
-    border: 2px solid var(--accent);
-  }
-  .timeline-item.remember::before { border-color: var(--purple); }
-  .timeline-item.recall::before { border-color: var(--accent); }
-  .timeline-item.improve::before { border-color: var(--emerald); }
-  .timeline-item.session-created::before { border-color: var(--amber); }
-  
-  .timeline-item.faded::before{ border-color: var(--text-2); }
-  .timeline-item .t-title{ font-size: 12.5px; font-weight: 600; color: var(--text-0); }
-  .timeline-item .t-sub{ font-size: 11px; color: var(--text-1); margin-top: 3px; line-height: 1.4; }
-  .timeline-item .t-time{ font-size: 9.5px; color: var(--text-2); font-family: var(--font-mono); margin-top: 4px; }
-
-  /* ============ MEMORY SEARCH & INTERACTIONS ============ */
-  .memory-search-box {
-    margin-bottom: 16px;
-    position: relative;
-  }
-  .memory-search-box input {
-    width: 100%;
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 8px 12px;
-    font-size: 12px;
-    color: var(--text-0);
-    outline: none;
-  }
-  .memory-search-box input:focus {
-    border-color: var(--accent);
-  }
-  .btn-delete-mem {
-    background: transparent;
-    border: none;
-    color: var(--text-2);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-  }
-  .btn-delete-mem:hover {
-    color: var(--accent);
-    background: rgba(255,255,255,0.05);
-  }
-
-  /* ============ MODAL SYSTEM ============ */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-  .modal-card {
-    background: var(--bg-1);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-lg);
-    width: 90%;
-    max-width: 480px;
-    padding: 24px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    animation: modalSlide 0.2s var(--ease);
-  }
-  @keyframes modalSlide {
-    from { transform: translateY(12px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .modal-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0 0 12px;
-    color: var(--text-0);
-  }
-  .modal-meta-row {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-1);
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-  }
-  .modal-body-text {
-    font-size: 13.5px;
-    line-height: 1.5;
-    color: var(--text-0);
-    background: var(--bg-0);
-    padding: 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    margin: 16px 0;
-  }
-  .modal-close-btn {
-    background: var(--accent);
-    color: var(--bg-0);
-    border: none;
-    border-radius: var(--radius-sm);
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    text-align: center;
-  }
-
-  /* scrollbar */
-  ::-webkit-scrollbar{ width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track{ background: transparent; }
-  ::-webkit-scrollbar-thumb{ background: var(--border-strong); border-radius: 8px; }
-  ::-webkit-scrollbar-thumb:hover{ background: var(--text-2); }
-
-  @media (max-width: 980px){
-    .app{ grid-template-columns: 0px 1fr 0px; }
-    .nav, .memory-panel{ display: none; }
-  }
-</style>
+        .scrollbar-none::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
-<body>
 
-<div class="app">
-
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="brand">
-      <div class="brand-mark"></div>
-      MemoryOS
-    </div>
-    <div class="topbar-center">
-      <span class="dot"></span>
-      <span id="graph-stat">Graph · 0 nodes · 0 edges</span>
-    </div>
-    <div class="topbar-right">
-      <!-- Session controls moved to Left Nav -->
-      <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-2);">Active Session Workspace</span>
-    </div>
-  </div>
-
-  <!-- LEFT NAV -->
-  <div class="nav">
-    <div class="nav-section-label" style="padding-top:0; display:flex; justify-content:space-between; align-items:center;">
-      <span>Sessions</span>
-      <span style="font-size:9px; font-family:var(--font-mono); color:var(--accent);" id="active-session-indicator">None</span>
-    </div>
-    <button id="btn-new-session" style="width:100%; background:var(--accent); color:var(--bg-0); border:none; border-radius:var(--radius-sm); padding:8px 12px; font-size:12px; font-weight:600; cursor:pointer; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
-      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-      New Session
-    </button>
-    
-    <div id="sessions-list-container" style="display:flex; flex-direction:column; gap:4px; max-height:220px; overflow-y:auto; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-      <!-- Dynamic session items list with select and delete buttons -->
-    </div>
-
-    <div class="nav-section-label">Navigate</div>
-    <div class="nav-item active" data-nav="workspace">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-      Workspace
-    </div>
-    <div class="nav-item disabled" title="Coming soon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
-      Projects
-      <span class="future-tag">SOON</span>
-    </div>
-    <div class="nav-item disabled" title="Coming soon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-      <span class="future-tag">SOON</span>
-    </div>
-
-    <div class="specialist-block">
-      <div class="nav-section-label" style="padding-left:0;">Specialists</div>
-      <div class="specialist-pill active" data-specialist="developer">
-        <span class="ring"></span>
-        <span class="label">Developer</span>
-        <span class="sub">live</span>
-      </div>
-      <div class="specialist-pill" data-specialist="learning">
-        <span class="ring"></span>
-        <span class="label">Learning</span>
-        <span class="sub">live</span>
-      </div>
-      <div class="specialist-pill" data-specialist="researcher">
-        <span class="ring"></span>
-        <span class="label">Research</span>
-        <span class="sub">live</span>
-      </div>
-      <div class="specialist-pill" data-specialist="planner">
-        <span class="ring"></span>
-        <span class="label">Planner</span>
-        <span class="sub">live</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAIN WORKSPACE -->
-  <div class="workspace">
-    <div class="workspace-header">
-      <div class="crumb">SPECIALIST / <span id="crumb-name">DEVELOPER</span></div>
-      <h1 id="header-title">Developer reasons over the shared graph</h1>
-      <div class="goal">Currently grounded in <b>persistent session graph</b> + <b id="goal-extra">conceptual notes from Learning</b></div>
-    </div>
-
-    <div class="chat-scroll" id="chat-scroll">
-      <!-- Chat logs dynamically injected here -->
-      <div class="msg ai shallow">
-        <div class="msg-bubble">Welcome to MemoryOS. Ingest new context using the Learning specialist, or ask questions to Developer.</div>
-      </div>
-    </div>
-
-    <div class="composer">
-      <!-- Dynamic evolution feedback box -->
-      <div class="improve-banner" id="improve-banner" style="display:none;">
-        <div class="title"><span class="spinner" id="improve-spinner"></span><span id="improve-title">Memory improving…</span></div>
-        <div class="improve-progress"><div class="improve-progress-fill" id="improve-fill"></div></div>
-        <div class="improve-stats">
-          <div class="improve-stat" id="stat-1"><div class="num">0</div><div class="lbl">Scanning facts</div></div>
-          <div class="improve-stat" id="stat-2"><div class="num">0</div><div class="lbl">Finding relationships</div></div>
-          <div class="improve-stat" id="stat-3"><div class="num">0</div><div class="lbl">Consolidating graph</div></div>
-        </div>
-        <div class="improve-done" id="improve-done">✓ Memory evolution complete</div>
-      </div>
-
-      <div class="composer-bar">
-        <input type="text" placeholder="Ask Developer anything it remembers…" id="composer-input" autocomplete="off" />
-        <div class="composer-actions">
-          <button class="btn-improve" id="btn-trigger-improve">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-            Run improve()
-          </button>
-          <button class="btn-send" id="btn-send-message">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0A0B0E" stroke-width="2.2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="composer-hint">Shared persistent memory fabric · One memory, infinite lenses</div>
-    </div>
-  </div>
-
-  <!-- RIGHT MEMORY PANEL -->
-  <div class="memory-panel">
-    <div class="panel-tabs">
-      <div class="panel-tab active" data-tab="memory">Memory</div>
-      <div class="panel-tab" data-tab="timeline">Timeline</div>
-    </div>
-
-    <div class="panel-body" id="panel-memory">
-      <!-- Live Knowledge Graph Frame -->
-      <div class="graph-frame">
-        <span class="graph-expand" onclick="openGraph()">Expand ↗</span>
-        <span class="graph-label">live · kuzu graph</span>
-        <svg viewBox="0 0 300 220">
-          <g id="graph-edges" stroke="rgba(77,141,255,0.35)" stroke-width="1.2" fill="none"></g>
-          <g id="graph-nodes"></g>
-        </svg>
-      </div>
-
-      <!-- Context Panel (Why the AI knows this) -->
-      <div class="memory-section-title">Context & Reason (Why AI knows this)</div>
-      <div class="memory-card" style="background:transparent; border-style:dashed; margin-bottom: 20px;">
-        <div class="fact" id="why-knows-text" style="font-weight:400; color:var(--text-1); font-size:11.5px; line-height:1.5;">
-          Traverse graph relationships by querying the persistent graph nodes directly. Ingest facts or ask questions to view reasoning paths.
-        </div>
-      </div>
-
-      <!-- Context retrieved cards -->
-      <div class="memory-section-title">Retrieved context this turn</div>
-      <div id="retrieved-container" style="margin-bottom: 24px;">
-        <div style="font-size:11.5px; color:var(--text-2); padding:4px;">No facts retrieved yet. Ingest facts to see active context paths.</div>
-      </div>
-
-      <!-- Session memories search and list -->
-      <div class="memory-section-title">Ingested memories list</div>
-      <div class="memory-search-box">
-        <input type="text" placeholder="Search memories..." id="memory-search-input" />
-      </div>
-      <div id="memory-list-container">
-        <!-- Ingested memories with delete button will be listed here -->
-        <div style="font-size:11.5px; color:var(--text-2); padding:4px;">No memories logged. Select Learner Specialist to ingest facts.</div>
-      </div>
-    </div>
-
-    <!-- Timeline Body -->
-    <div class="panel-body" id="panel-timeline" style="display:none;">
-      <div class="timeline-wrap" id="timeline-container">
-        <div style="font-size:11.5px; color:var(--text-2);">Session timeline is empty. Ingest knowledge to start.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MEMORY INSPECTOR MODAL -->
-  <div class="modal-overlay" id="inspector-modal">
-    <div class="modal-card">
-      <h3 class="modal-title" id="modal-title">Memory Inspector</h3>
-      <div class="modal-meta-row">
-        <span>Specialist: <b id="modal-specialist" style="color:var(--purple);">learner</b></span>
-        <span>Importance: <b id="modal-importance" style="color:var(--amber);">high</b></span>
-      </div>
-      <div class="modal-meta-row">
-        <span>Confidence: <b id="modal-confidence" style="color:var(--emerald);">1.00</b></span>
-        <span>ID: <b id="modal-id" style="color:var(--text-1);">N/A</b></span>
-      </div>
-      <div class="modal-body-text" id="modal-text"></div>
-      <div class="modal-meta-row" style="margin-top: 8px;">
-        <span style="font-size:10px;">Timestamp: <span id="modal-timestamp">N/A</span></span>
-      </div>
-      <button class="modal-close-btn" onclick="closeInspector()">Close Inspector</button>
-    </div>
-  </div>
-
-  <!-- GRAPH EXPLORER MODAL -->
-  <div class="modal-overlay" id="graph-modal" style="display:none; justify-content:center; align-items:center; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999;">
-    <div class="modal-card" style="max-width:850px; width:90%; background:var(--bg-1); border:1px solid var(--border); border-radius:12px; padding:24px; position:relative;">
-      <h3 class="modal-title" style="margin-top:0; color:var(--text-0); font-family:var(--font-display); font-size:16px; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
-        <span>Interactive Knowledge Graph Explorer</span>
-        <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-2); font-weight:normal;">Drag to pan · Scroll to zoom · Click to inspect</span>
-      </h3>
-      <div id="interactive-network" style="width: 100%; height: 480px; background-color: var(--bg-0); border-radius: 8px; border: 1px solid var(--border); margin-top: 12px;"></div>
-      <button class="modal-close-btn" onclick="closeGraph()" style="width:100%; margin-top:16px; background:var(--bg-3); border:1px solid var(--border); color:var(--text-1); padding:10px; border-radius:8px; cursor:pointer; font-weight:600; font-size:12px; transition:all 0.15s ease;">Close Explorer</button>
-    </div>
-  </div>
-
-</div>
-
-<script>
-  // Redirect API requests to FastAPI backend on port 8000 when running inside Streamlit's sandboxed iframe
-  const originalFetch = window.fetch;
-  window.fetch = function(url, options) {
-    if (typeof url === 'string' && url.startsWith('/api')) {
-      url = 'http://localhost:8000' + url;
-    }
-    return originalFetch(url, options);
-  };
-
-  let activeSessionId = '';
-  let activeSpecialist = 'developer';
-
-  // Fetch session history & load memory
-  async function loadSessions() {
-    const res = await fetch('/api/sessions');
-    const sessions = await res.json();
-    const container = document.getElementById('sessions-list-container');
-    container.innerHTML = '';
-    
-    if (sessions.length === 0) {
-      // Auto create a session
-      const dateStr = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
-      const createRes = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metadata: { name: `Session ${dateStr} #1` } })
-      });
-      const newSess = await createRes.json();
-      activeSessionId = newSess.session_id;
-    } else {
-      const exists = sessions.some(s => s.session_id === activeSessionId);
-      if (!exists) {
-        activeSessionId = sessions[0].session_id;
-      }
-    }
-    
-    document.getElementById('active-session-indicator').textContent = activeSessionId ? activeSessionId.substring(0, 6).toUpperCase() : 'NONE';
-    
-    sessions.forEach(s => {
-      const item = document.createElement('div');
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'space-between';
-      item.style.padding = '8px 10px';
-      item.style.borderRadius = 'var(--radius-sm)';
-      item.style.fontSize = '12px';
-      item.style.cursor = 'pointer';
-      item.style.transition = 'all 0.15s var(--ease)';
-      item.style.marginBottom = '2px';
-      
-      const isSelected = s.session_id === activeSessionId;
-      if (isSelected) {
-        item.style.background = 'var(--bg-3)';
-        item.style.color = 'var(--text-0)';
-        item.style.border = '1px solid var(--border-strong)';
-      } else {
-        item.style.background = 'transparent';
-        item.style.color = 'var(--text-1)';
-        item.style.border = '1px solid transparent';
-      }
-      
-      item.addEventListener('mouseenter', () => {
-        if (!isSelected) {
-          item.style.background = 'var(--bg-2)';
-          item.style.color = 'var(--text-0)';
-        }
-      });
-      
-      item.addEventListener('mouseleave', () => {
-        if (!isSelected) {
-          item.style.background = 'transparent';
-          item.style.color = 'var(--text-1)';
-        }
-      });
-      
-      const selectWrapper = document.createElement('div');
-      selectWrapper.style.display = 'flex';
-      selectWrapper.style.alignItems = 'center';
-      selectWrapper.style.gap = '8px';
-      selectWrapper.style.flex = '1';
-      selectWrapper.innerHTML = `
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.75;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span>${s.metadata?.name || 'Session (' + s.session_id.substring(0, 6) + ')'}</span>
-      `;
-      selectWrapper.onclick = () => {
-        activeSessionId = s.session_id;
-        loadSessions();
-      };
-      item.appendChild(selectWrapper);
-      
-      const delBtn = document.createElement('button');
-      delBtn.style.background = 'transparent';
-      delBtn.style.border = 'none';
-      delBtn.style.color = 'var(--text-2)';
-      delBtn.style.cursor = 'pointer';
-      delBtn.style.padding = '2px';
-      delBtn.style.display = 'flex';
-      delBtn.style.alignItems = 'center';
-      delBtn.style.justifyContent = 'center';
-      delBtn.innerHTML = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-      delBtn.onclick = async (e) => {
-        e.stopPropagation();
-        if (confirm('Delete this session context?')) {
-          const delRes = await fetch(`/api/sessions/${s.session_id}`, { method: 'DELETE' });
-          if (delRes.ok) {
-            if (activeSessionId === s.session_id) {
-              activeSessionId = '';
-            }
-            loadSessions();
-          }
-        }
-      };
-      item.appendChild(delBtn);
-      
-      container.appendChild(item);
-    });
-    
-    updateWorkspace();
-  }
- 
-  // Bind new session button
-  document.getElementById('btn-new-session').addEventListener('click', async () => {
-    const listRes = await fetch('/api/sessions');
-    const sessionsList = await listRes.json();
-    const nextCount = sessionsList.length + 1;
-    const dateStr = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
-    const res = await fetch('/api/sessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ metadata: { name: `Session ${dateStr} #${nextCount}` } })
-    });
-    if (res.ok) {
-      await loadSessions();
-    }
-  });
-
-  // Specialist selection
-  const headerTitle = document.getElementById('header-title');
-  const crumbName = document.getElementById('crumb-name');
-  const goalExtra = document.getElementById('goal-extra');
-  const compInput = document.getElementById('composer-input');
-
-  document.querySelectorAll('.specialist-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      document.querySelectorAll('.specialist-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      activeSpecialist = pill.dataset.specialist;
-
-      if (activeSpecialist === 'learning') {
-        crumbName.textContent = 'LEARNING';
-        headerTitle.textContent = 'Learning reasons over the shared graph';
-        goalExtra.textContent = 'implementation context from Developer';
-        compInput.placeholder = 'Enter new facts to remember...';
-      } else if (activeSpecialist === 'researcher') {
-        crumbName.textContent = 'RESEARCH';
-        headerTitle.textContent = 'Research Specialist analyzes concepts deeply';
-        goalExtra.textContent = 'cross-domain connections and references';
-        compInput.placeholder = 'Enter a topic to research deeply...';
-      } else if (activeSpecialist === 'planner') {
-        crumbName.textContent = 'PLANNER';
-        headerTitle.textContent = 'Planner Specialist designs roadmap plans';
-        goalExtra.textContent = 'step-by-step checklists and dependencies';
-        compInput.placeholder = 'Enter a goal to plan roadmap step checklist...';
-      } else {
-        crumbName.textContent = 'DEVELOPER';
-        headerTitle.textContent = 'Developer reasons over the shared graph';
-        goalExtra.textContent = 'conceptual notes from Learning';
-        compInput.placeholder = 'Ask Developer anything it remembers...';
-      }
-    });
-  });
-
-  // Fetch and update graph + timeline
-  let allMemories = [];
-
-  // Inspector actions
-  function openInspector(memId) {
-    const mem = allMemories.find(m => m.memory_id === memId);
-    if (!mem) return;
-    
-    document.getElementById('modal-title').textContent = mem.specialist === 'learner' ? 'Ingested Memory Inspector' : 'Developer Q&A Trace';
-    document.getElementById('modal-specialist').textContent = mem.specialist;
-    document.getElementById('modal-importance').textContent = mem.metadata?.importance || 'medium';
-    document.getElementById('modal-confidence').textContent = (mem.metadata?.confidence !== undefined) ? mem.metadata.confidence.toFixed(2) : '1.00';
-    document.getElementById('modal-id').textContent = mem.memory_id.substring(0, 18) + '...';
-    document.getElementById('modal-text').textContent = mem.text;
-    document.getElementById('modal-timestamp').textContent = new Date(mem.created_at).toLocaleString();
-    
-    document.getElementById('inspector-modal').style.display = 'flex';
-  }
-
-  function closeInspector() {
-    document.getElementById('inspector-modal').style.display = 'none';
-  }
-
-  let networkInstance = null;
-
-  function openGraph() {
-    document.getElementById('graph-modal').style.display = 'flex';
-    
-    // Prepare Vis.js Nodes and Edges
-    const nodes = [];
-    const edges = [];
-    
-    // 1. Add Center Session Node
-    if (activeSessionId) {
-      nodes.push({
-        id: activeSessionId,
-        label: `Active Session\n(${activeSessionId.substring(0, 6)})`,
-        color: { background: '#9B7CFF', border: 'rgba(255,255,255,0.4)' },
-        font: { color: '#F2F3F5', size: 13, face: 'Inter' },
-        shape: 'dot',
-        size: 26
-      });
-    }
-    
-    // 2. Loop through all memories and populate nodes/links
-    allMemories.forEach((m, idx) => {
-      const isLearner = m.specialist === 'learner';
-      
-      // Specialist nodes
-      const specId = `spec_${m.specialist}`;
-      nodes.push({
-        id: specId,
-        label: `${m.specialist.toUpperCase()}\nSpecialist`,
-        color: { background: '#4D8DFF', border: 'rgba(255,255,255,0.3)' },
-        font: { color: '#F2F3F5', size: 11, face: 'Inter' },
-        shape: 'diamond',
-        size: 18
-      });
-      
-      // Fact/Query Node
-      const nodeId = m.memory_id;
-      nodes.push({
-        id: nodeId,
-        label: isLearner ? `Fact #${idx + 1}` : `Q&A #${idx + 1}`,
-        title: m.text, // tooltip on hover
-        color: { background: isLearner ? '#7A5CFF' : '#C45CFF', border: 'rgba(255,255,255,0.2)' },
-        font: { color: '#F2F3F5', size: 10, face: 'Inter' },
-        shape: 'dot',
-        size: 14
-      });
-      
-      // Connect memory to active session and specialist
-      if (activeSessionId) {
-        edges.push({ from: nodeId, to: activeSessionId });
-      }
-      edges.push({ from: nodeId, to: specId });
-      
-      // Keyword Concept Extraction nodes
-      const kws = ['fastapi', 'cognee', 'sqlite', 'graph', 'vector', 'database', 'model', 'groq', 'gemini'];
-      const textLower = m.text.toLowerCase();
-      kws.forEach(kw => {
-        if (textLower.includes(kw)) {
-          const kwId = `kw_${kw}`;
-          nodes.push({
-            id: kwId,
-            label: kw.toUpperCase(),
-            color: { background: '#F2B544', border: 'rgba(255,255,255,0.3)' },
-            font: { color: '#0A0B0E', size: 10, face: 'JetBrains Mono', weight: 'bold' },
-            shape: 'box',
-            margin: 8
-          });
-          edges.push({ from: nodeId, to: kwId });
-        }
-      });
-    });
-    
-    // De-duplicate nodes
-    const uniqueNodes = Array.from(new Map(nodes.map(n => [n.id, n])).values());
-    
-    // Render Network Graph
-    const container = document.getElementById('interactive-network');
-    const data = {
-      nodes: new vis.DataSet(uniqueNodes),
-      edges: new vis.DataSet(edges)
-    };
-    
-    const options = {
-      edges: {
-        color: { color: 'rgba(255,255,255,0.12)', highlight: '#4D8DFF' },
-        width: 1.2
-      },
-      physics: {
-        solver: 'forceAtlas2Based',
-        forceAtlas2Based: {
-          gravitationalConstant: -35,
-          centralGravity: 0.015,
-          springLength: 90,
-          springConstant: 0.08
-        }
-      },
-      interaction: {
-        hover: true,
-        tooltipDelay: 100
-      }
-    };
-    
-    if (networkInstance) {
-      networkInstance.destroy();
-    }
-    networkInstance = new vis.Network(container, data, options);
-    
-    // Inspect on click
-    networkInstance.on('click', function(properties) {
-      const ids = properties.nodes;
-      if (ids.length > 0) {
-        const selectedId = ids[0];
-        // If it's a memory node, open inspector modal!
-        if (allMemories.some(m => m.memory_id === selectedId)) {
-          closeGraph();
-          openInspector(selectedId);
-        }
-      }
-    });
-  }
-
-  function closeGraph() {
-    document.getElementById('graph-modal').style.display = 'none';
-    if (networkInstance) {
-      networkInstance.destroy();
-      networkInstance = null;
-    }
-  }
-
-  // Delete memory action
-  async function deleteMemory(event, memId) {
-    event.stopPropagation(); // prevent opening inspector modal
-    if (!confirm('Are you sure you want to delete this memory log?')) return;
-    
-    const res = await fetch(`/api/memory/${memId}`, { method: 'DELETE' });
-    if (res.ok) {
-      updateWorkspace();
-    } else {
-      alert('Failed to delete memory log.');
-    }
-  }
-
-  // Search input binding
-  document.getElementById('memory-search-input').addEventListener('input', () => {
-    filterAndRenderMemories();
-  });
-
-  function filterAndRenderMemories() {
-    const query = document.getElementById('memory-search-input').value.toLowerCase().trim();
-    const container = document.getElementById('memory-list-container');
-    const filtered = allMemories.filter(m => m.text.toLowerCase().includes(query));
-    
-    if (filtered.length === 0) {
-      container.innerHTML = `<div style="font-size:11.5px; color:var(--text-2); padding:4px;">${query ? 'No matching memories found.' : 'No memories logged. Select Learner Specialist to ingest facts.'}</div>`;
-      return;
-    }
-
-    container.innerHTML = '';
-    filtered.forEach(m => {
-      const card = document.createElement('div');
-      card.className = 'memory-card';
-      card.style.cursor = 'pointer';
-      card.onclick = () => openInspector(m.memory_id);
-      
-      const importance = m.metadata?.importance || 'medium';
-      const impColor = importance === 'high' ? 'high' : 'med';
-      const specDot = m.specialist === 'learner' ? 'learning' : 'developer';
-
-      card.innerHTML = `
-        <div class="top-row">
-          <div class="fact">${m.text.substring(0, 65)}${m.text.length > 65 ? '...' : ''}</div>
-          <button class="btn-delete-mem" onclick="deleteMemory(event, '${m.memory_id}')" title="Delete memory">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
-        </div>
-        <div class="meta-row">
-          <span class="src-tag"><span class="src-dot ${specDot}"></span>${m.specialist.toUpperCase()}</span>
-          <span class="confidence ${impColor}">${importance}</span>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  }
-
-  // Central workspace updater
-  async function updateWorkspace() {
-    if (!activeSessionId) return;
-
-    // 1. Fetch memories
-    const memRes = await fetch('/api/memory');
-    allMemories = await memRes.json();
-
-    // 2. Render Graph
-    renderGraph(allMemories);
-
-    // 3. Render Memory lists
-    filterAndRenderMemories();
-
-    // 4. Update header stats
-    document.getElementById('graph-stat').textContent = `Graph · ${allMemories.length} nodes · ${Math.max(0, allMemories.length - 1)} edges`;
-
-    // 5. Render Timeline
-    const timelineContainer = document.getElementById('timeline-container');
-    const sessMems = allMemories.filter(m => m.session_id === activeSessionId);
-    
-    if (sessMems.length === 0) {
-      timelineContainer.innerHTML = `
-        <div class="timeline-wrap">
-          <div class="timeline-item session-created">
-            <div class="t-title">Session Instantiated</div>
-            <div class="t-sub">New workspace session initiated. Status: active.</div>
-            <div class="t-time">${new Date().toLocaleTimeString()}</div>
-          </div>
-        </div>
-      `;
-    } else {
-      timelineContainer.innerHTML = '';
-      const wrap = document.createElement('div');
-      wrap.classList.add('timeline-wrap');
-
-      // Add session instantiated start event
-      const startItem = document.createElement('div');
-      startItem.className = 'timeline-item session-created';
-      startItem.innerHTML = `
-        <div class="t-title">Session Instantiated</div>
-        <div class="t-sub">Workspace session initiated for persistent graph traversal.</div>
-        <div class="t-time">Start</div>
-      `;
-      wrap.appendChild(startItem);
-
-      // Reverse list to show chronological order (earliest to latest)
-      const chronoMems = [...sessMems].reverse();
-
-      chronoMems.forEach(m => {
-        const item = document.createElement('div');
-        
-        if (m.specialist === 'learner') {
-          item.className = 'timeline-item remember';
-          item.innerHTML = `
-            <div class="t-title">Learning · remember()</div>
-            <div class="t-sub">Ingested fact: "${m.text}"</div>
-            <div class="t-time">${new Date(m.created_at).toLocaleTimeString()}</div>
-          `;
-        } else {
-          item.className = 'timeline-item recall';
-          item.innerHTML = `
-            <div class="t-title">Developer · recall()</div>
-            <div class="t-sub">Resolved query: "${m.metadata?.query || m.text.substring(0, 30)}"</div>
-            <div class="t-time">${new Date(m.created_at).toLocaleTimeString()}</div>
-          `;
-        }
-        wrap.appendChild(item);
-      });
-      
-      timelineContainer.appendChild(wrap);
-    }
-  }
-
-  // Custom force layout SVG graph builder in javascript
-  function renderGraph(memories) {
-    const nodesG = document.getElementById('graph-nodes');
-    const edgesG = document.getElementById('graph-edges');
-    nodesG.innerHTML = '';
-    edgesG.innerHTML = '';
-
-    const width = 300;
-    const height = 220;
-    const cx = width / 2;
-    const cy = height / 2;
-
-    const nodes = [];
-    const edges = [];
-
-    // Add session center node
-    nodes.push({ id: 'sess', label: 'Session', x: cx, y: cy, color: '#A88BEB', size: 8 });
-
-    // Add memory nodes
-    memories.forEach((m, idx) => {
-      const angle = (2 * Math.PI * idx) / memories.length;
-      const radius = 60 + (idx % 2 === 0 ? 15 : -15);
-      nodes.push({
-        id: m.memory_id,
-        label: m.specialist === 'learner' ? `Fact ${idx+1}` : `Q&A ${idx+1}`,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle),
-        color: m.specialist === 'learner' ? '#7A5CFF' : '#C45CFF',
-        size: 5,
-        text: m.text
-      });
-      edges.push(['sess', m.memory_id]);
-    });
-
-    // Render edges
-    edges.forEach(([a, b]) => {
-      const nA = nodes.find(n => n.id === a);
-      const nB = nodes.find(n => n.id === b);
-      if (nA && nB) {
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', nA.x);
-        line.setAttribute('y1', nA.y);
-        line.setAttribute('x2', nB.x);
-        line.setAttribute('y2', nB.y);
-        edgesG.appendChild(line);
-      }
-    });
-
-    // Render nodes
-    nodes.forEach(n => {
-      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      c.setAttribute('cx', n.x);
-      c.setAttribute('cy', n.y);
-      c.setAttribute('r', n.size);
-      c.setAttribute('fill', n.color);
-      c.classList.add('graph-node');
-      
-      const t = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-      t.textContent = n.text || n.label;
-      c.appendChild(t);
-      nodesG.appendChild(c);
-    });
-  }
-
-  // Composer submit
-  async function sendMessage() {
-    const text = compInput.value.trim();
-    if (!text || !activeSessionId) return;
-
-    compInput.value = '';
-    compInput.disabled = true; // Disable input text area of the query writing
-
-    // Append user message bubble
-    const chatScroll = document.getElementById('chat-scroll');
-    const uMsg = document.createElement('div');
-    uMsg.className = 'msg user';
-    uMsg.innerHTML = `<div class="msg-bubble">${text}</div>`;
-    chatScroll.appendChild(uMsg);
-    chatScroll.scrollTop = chatScroll.scrollHeight;
-
-    // Send backend request & show multi-stage thinking logs
-    const spinner = document.createElement('div');
-    spinner.className = 'msg ai shallow';
-    
-    // Initial State: Thinking
-    spinner.innerHTML = `<div class="msg-bubble" style="display:flex; align-items:center; gap:8px;"><span class="spinner"></span> <span id="pipeline-status-text">Searching Memory Graph...</span></div>`;
-    chatScroll.appendChild(spinner);
-    chatScroll.scrollTop = chatScroll.scrollHeight;
-
-    // Simulate multi-stage cognitive tracing in UI
-    setTimeout(() => {
-      const el = document.getElementById('pipeline-status-text');
-      if (el) el.textContent = 'Ranking Retrieved Context...';
-    }, 600);
-    setTimeout(() => {
-      const el = document.getElementById('pipeline-status-text');
-      if (el) el.textContent = 'Applying Cognee Shared Memory...';
-    }, 1200);
-    setTimeout(() => {
-      const el = document.getElementById('pipeline-status-text');
-      if (el) el.textContent = 'Reasoning via Groq...';
-    }, 1800);
-
-    let res;
-    if (activeSpecialist === 'learning') {
-      res = await fetch('/api/specialists/learner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: activeSessionId, text: text })
-      });
-    } else if (activeSpecialist === 'researcher') {
-      res = await fetch('/api/specialists/researcher', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: activeSessionId, query: text })
-      });
-    } else if (activeSpecialist === 'planner') {
-      res = await fetch('/api/specialists/planner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: activeSessionId, query: text })
-      });
-    } else {
-      res = await fetch('/api/specialists/developer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: activeSessionId, query: text })
-      });
-    }
-
-    spinner.remove();
-
-    if (res.ok) {
-      const data = await res.json();
-      const aiMsg = document.createElement('div');
-      aiMsg.className = 'msg ai deep';
-      
-      const answerText = data.answer || (data.status === 'remembered' ? `Fact ingested successfully: "${data.facts_extracted[0]}"` : 'Completed.');
-      aiMsg.innerHTML = `<div class="msg-bubble">${answerText}</div>`;
-      
-      // Trace chips (Task 4 Context Panel)
-      const trace = document.createElement('div');
-      trace.className = 'recall-trace';
-      if (data.context_used && data.context_used.length > 0) {
-        trace.innerHTML = `<span class="recall-chip"><span class="hop-dot"></span>${data.context_used.length} context facts retrieved</span>`;
-      } else {
-        trace.innerHTML = `<span class="recall-chip"><span class="hop-dot"></span>1 hop · shallow lens</span>`;
-      }
-      aiMsg.appendChild(trace);
-      chatScroll.appendChild(aiMsg);
-      
-      // Update Context Panel
-      const retrievedContainer = document.getElementById('retrieved-container');
-      const whyKnowsText = document.getElementById('why-knows-text');
-      
-      if (data.context_used && data.context_used.length > 0) {
-        retrievedContainer.innerHTML = '';
-        data.context_used.forEach(ctx => {
-          const card = document.createElement('div');
-          card.className = 'memory-card';
-          card.innerHTML = `
-            <div class="top-row">
-              <div class="fact">${ctx.text || ctx.str_val || JSON.stringify(ctx)}</div>
-              <div class="confidence high">0.95</div>
+<body class="h-full font-sans selection:bg-zinc-500/20 overflow-hidden">
+    <!-- BEGIN: Full Screen Graph Overlay -->
+    <div class="fixed inset-0 z-50 bg-os-surface/95 backdrop-blur-md flex-col hidden" id="graph-overlay">
+        <header class="h-16 border-b border-os-border flex items-center justify-between px-8">
+            <div class="flex items-center gap-4">
+                <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Global Graph
+                    View</span>
+                <span class="text-[10px] font-mono opacity-60" id="overlay-graph-stats">Loading Nodes & Edges...</span>
             </div>
-            <div class="meta-row">
-              <span class="src-tag"><span class="src-dot learning"></span>Ingested Fact</span>
+            <button class="text-secondary hover:text-os-ink transition-colors"
+                onclick="closeNodeDetails(); document.getElementById('graph-overlay').classList.add('hidden')">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                    </path>
+                </svg>
+            </button>
+        </header>
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Left Graph Pane (60%) -->
+            <div class="w-full h-full relative overflow-hidden bg-[radial-gradient(var(--graph-grid)_1px,transparent_1px)] [background-size:40px_40px] flex items-center justify-center p-8 transition-all duration-300"
+                id="overlay-graph-container">
+                <!-- Global SVG Graph goes here -->
             </div>
-          `;
-          retrievedContainer.appendChild(card);
+            
+            <!-- Right Inspector Pane (40%) -->
+            <div class="hidden w-full lg:w-2/5 h-full border-l border-os-border bg-os-surface flex-col p-8 overflow-y-auto transition-all duration-300" id="node-details-panel">
+                <div class="flex items-center justify-between mb-8 border-b border-os-border pb-4">
+                    <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Node Inspector</span>
+                    <button class="text-secondary hover:text-os-ink transition-colors flex items-center justify-center" onclick="closeNodeDetails()">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+                <div id="node-details-content" class="space-y-6">
+                    <div class="text-center py-12 text-secondary/60 font-mono italic text-[11px]">
+                        Click on any node in the graph to inspect its properties and facts.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- BEGIN: Permanent Graph Overlay -->
+    <div class="fixed inset-0 z-50 bg-os-surface/95 backdrop-blur-md flex-col hidden" id="permanent-graph-overlay">
+        <header class="h-16 border-b border-os-border flex items-center justify-between px-8">
+            <div class="flex items-center gap-4">
+                <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Permanent Knowledge Graph</span>
+                <span class="text-[10px] font-mono opacity-60" id="permanent-graph-stats">Loading Nodes & Edges...</span>
+            </div>
+            <button class="text-secondary hover:text-os-ink transition-colors"
+                onclick="closePermanentNodeDetails(); document.getElementById('permanent-graph-overlay').classList.add('hidden')">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                    </path>
+                </svg>
+            </button>
+        </header>
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Left Graph Pane (60%) -->
+            <div class="w-full h-full relative overflow-hidden bg-[radial-gradient(var(--graph-grid)_1px,transparent_1px)] [background-size:40px_40px] flex items-center justify-center p-8 transition-all duration-300"
+                id="permanent-graph-container">
+                <!-- Permanent SVG Graph goes here -->
+            </div>
+            
+            <!-- Right Inspector Pane (40%) -->
+            <div class="hidden w-full lg:w-2/5 h-full border-l border-os-border bg-os-surface flex-col p-8 overflow-y-auto transition-all duration-300" id="permanent-node-details-panel">
+                <div class="flex items-center justify-between mb-8 border-b border-os-border pb-4">
+                    <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Node Inspector</span>
+                    <button class="text-secondary hover:text-os-ink transition-colors flex items-center justify-center" onclick="closePermanentNodeDetails()">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+                <div id="permanent-node-details-content" class="space-y-6">
+                    <div class="text-center py-12 text-secondary/60 font-mono italic text-[11px]">
+                        Click on any node in the permanent graph to inspect.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- BEGIN: Main Dashboard Layout -->
+    <div class="flex h-screen w-full overflow-hidden" id="app-container">
+        <!-- BEGIN: Left Sidebar -->
+        <aside
+            class="w-64 flex-shrink-0 border-r border-os-border bg-os-surface flex flex-col p-6 transition-colors duration-300">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="w-6 h-6 bg-os-ink rounded flex items-center justify-center">
+                    <div class="w-2 h-2 bg-os-surface rounded-full transition-colors duration-300"></div>
+                </div>
+                <span class="font-heading font-bold tracking-tight text-lg">MemoryOS</span>
+            </div>
+            <!-- Session Section -->
+            <div class="mb-6 flex flex-col flex-1 min-h-0">
+                <div
+                    class="flex items-center justify-between text-[10px] text-secondary font-mono uppercase tracking-widest-plus mb-3 px-1 flex-shrink-0">
+                    <span class="">Sessions</span>
+                </div>
+                <!-- Session list container scrollable, scrollbars hidden -->
+                <div id="session-list" class="space-y-1.5 overflow-y-auto mb-4 scrollbar-none flex-1 max-h-[220px]">
+                    <!-- Sessions populated dynamically -->
+                </div>
+                <button id="btn-new-session"
+                    class="w-full py-2 bg-os-ink hover:opacity-90 text-os-surface rounded-full text-[12px] font-medium transition-all flex items-center justify-center gap-2 border border-os-ink shadow-sm flex-shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                    New Session
+                </button>
+            </div>
+            <!-- Navigation Section -->
+            <nav class="mb-auto">
+                <div class="text-[10px] text-secondary font-mono uppercase tracking-widest-plus mb-4 px-1">Navigate
+                </div>
+                <div class="space-y-1">
+                    <a class="flex items-center gap-3 px-4 py-2 bg-os-ink/5 rounded-full text-[13px] font-medium border border-os-border/50"
+                        href="#">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path
+                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                        Workspace
+                    </a>
+                    <a class="flex items-center justify-between gap-3 px-4 py-2 rounded-full text-[13px] text-secondary hover:text-os-ink transition-colors soon-btn"
+                        href="#">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                            Projects
+                        </div>
+                        <span
+                            class="text-[8px] bg-os-border/50 text-secondary px-1.5 py-0.5 rounded-full tracking-tighter">SOON</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2 rounded-full text-[13px] text-secondary hover:text-os-ink transition-colors"
+                        href="#" onclick="openPermanentGraph()">
+                        <span class="material-symbols-outlined text-[18px] opacity-60">hub</span>
+                        Permanent Graph
+                    </a>
+                    <a class="flex items-center justify-between gap-3 px-4 py-2 rounded-full text-[13px] text-secondary hover:text-os-ink transition-colors soon-btn"
+                        href="#">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                            Settings
+                        </div>
+                        <span
+                            class="text-[8px] bg-os-border/50 text-secondary px-1.5 py-0.5 rounded-full tracking-tighter">SOON</span>
+                    </a>
+                </div>
+            </nav>
+            <!-- Specialists Section -->
+            <div class="mt-8 border-t border-os-border pt-8 transition-colors duration-300">
+                <div class="text-[10px] text-secondary font-mono uppercase tracking-widest-plus mb-4 px-1">Specialists
+                </div>
+                <div class="space-y-2" id="specialists-list">
+                    <button id="spec-developer" data-specialist="developer"
+                        class="w-full flex items-center justify-between px-4 py-2.5 bg-os-ink text-os-surface rounded-full text-[13px] transition-colors duration-300">
+                        <div class="flex items-center gap-3">
+                            <span class="w-1.5 h-1.5 bg-os-surface rounded-full transition-colors duration-300"></span>
+                            Developer
+                        </div>
+                        <span class="text-[10px] font-mono opacity-60">live</span>
+                    </button>
+                    <button id="spec-learning" data-specialist="learner"
+                        class="w-full flex items-center justify-between px-4 py-2.5 text-[13px] text-secondary hover:text-os-ink transition-colors rounded-full">
+                        <div class="flex items-center gap-3">
+                            <span class="w-1.5 h-1.5 border border-secondary rounded-full"></span>
+                            Learning
+                        </div>
+                        <span class="text-[10px] font-mono opacity-60">live</span>
+                    </button>
+                    <button id="spec-research" data-specialist="researcher"
+                        class="w-full flex items-center justify-between px-4 py-2.5 text-[13px] text-secondary hover:text-os-ink transition-colors rounded-full">
+                        <div class="flex items-center gap-3">
+                            <span class="w-1.5 h-1.5 border border-secondary rounded-full"></span>
+                            Research
+                        </div>
+                        <span class="text-[10px] font-mono opacity-60">live</span>
+                    </button>
+                    <button id="spec-planner" data-specialist="planner"
+                        class="w-full flex items-center justify-between px-4 py-2.5 text-[13px] text-secondary hover:text-os-ink transition-colors rounded-full">
+                        <div class="flex items-center gap-3">
+                            <span class="w-1.5 h-1.5 border border-secondary rounded-full"></span>
+                            Planner
+                        </div>
+                        <span class="text-[10px] font-mono opacity-60">live</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        <!-- BEGIN: Center Main Area -->
+        <main class="flex-1 flex flex-col relative overflow-hidden bg-os-bg transition-colors duration-300">
+            <!-- Header / Status Bar -->
+            <header
+                class="h-14 border-b border-os-border flex items-center justify-between px-6 bg-os-surface transition-colors duration-300">
+                <div class="flex items-center gap-4 text-[10px] font-mono text-secondary tracking-technical">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-os-ink rounded-full transition-colors duration-300"></span>
+                        Graph
+                    </div>
+                    <span class="">•</span>
+                    <span id="header-graph-stats">Loading...</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button
+                        class="flex items-center gap-2 bg-os-surface border border-os-border px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest-plus hover:bg-os-border/20 transition-all"
+                        onclick="toggleTheme()">
+                        <span class="material-symbols-outlined text-[16px]" id="theme-icon">dark_mode</span>
+                        <span class="" id="theme-text">Theme: Light</span>
+                    </button>
+                    <div class="text-[9px] text-secondary uppercase tracking-widest-plus font-mono">Active Session
+                        Workspace</div>
+                </div>
+            </header>
+            <!-- Content Area -->
+            <div class="flex-1 p-8 overflow-y-auto" id="chat-scroll">
+                <div class="max-w-3xl mx-auto space-y-8">
+                    <!-- Specialist header block -->
+                    <div class="space-y-2" id="workspace-header">
+                        <div class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus"
+                            id="crumb-specialist">Specialist / Developer</div>
+                        <h2 class="text-2xl font-heading font-semibold" id="workspace-title">Developer reasons over the
+                            shared graph</h2>
+                        <p class="text-sm text-secondary" id="workspace-desc">Currently grounded in persistent session
+                            graph + conceptual notes from Learning</p>
+                    </div>
+
+                    <!-- Chat Messages List -->
+                    <div class="space-y-6" id="chat-messages-container">
+                        <!-- Messages populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory Consolidation Progress Overlay -->
+            <div id="improve-banner"
+                class="hidden border-t border-os-border bg-os-surface p-6 transition-colors duration-300">
+                <div class="max-w-4xl mx-auto space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="animate-spin rounded-full h-4 w-4 border-2 border-os-ink border-t-transparent"
+                                id="improve-spinner"></div>
+                            <span class="text-[12px] font-mono text-os-ink font-semibold"
+                                id="improve-title">Consolidating memory graph...</span>
+                        </div>
+                        <span class="text-[10px] font-mono text-secondary" id="improve-done">Status: In Progress</span>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-os-bg h-2 rounded-full overflow-hidden border border-os-border">
+                        <div id="improve-fill" class="bg-os-ink h-full w-0 transition-all duration-1000 ease-out"></div>
+                    </div>
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-3 gap-4 pt-2">
+                        <div id="stat-1"
+                            class="bg-os-bg p-3 rounded-xl border border-os-border opacity-40 transition-opacity duration-300">
+                            <div class="text-[9px] font-mono text-secondary uppercase">Entities Found</div>
+                            <div class="text-lg font-heading font-bold mt-1 num">-</div>
+                        </div>
+                        <div id="stat-2"
+                            class="bg-os-bg p-3 rounded-xl border border-os-border opacity-40 transition-opacity duration-300">
+                            <div class="text-[9px] font-mono text-secondary uppercase">Relations Consolidated</div>
+                            <div class="text-lg font-heading font-bold mt-1 num">-</div>
+                        </div>
+                        <div id="stat-3"
+                            class="bg-os-bg p-3 rounded-xl border border-os-border opacity-40 transition-opacity duration-300">
+                            <div class="text-[9px] font-mono text-secondary uppercase">Evolution State</div>
+                            <div class="text-lg font-heading font-bold mt-1 num">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Dock -->
+            <div
+                class="p-8 border-t border-os-border bg-os-surface/80 backdrop-blur-xl transition-colors duration-300 relative">
+                <!-- Attachment Menu -->
+                <div class="absolute left-8 bottom-full mb-4 w-48 bg-os-surface border border-os-border rounded-xl shadow-xl p-1 attachment-menu hidden"
+                    id="attachment-menu">
+                    <button
+                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-os-ink/5 rounded-lg text-[12px] font-medium transition-colors"
+                        onclick="triggerUpload('file')">
+                        <span class="material-symbols-outlined text-[18px] opacity-60">description</span>
+                        Add File
+                    </button>
+                    <button
+                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-os-ink/5 rounded-lg text-[12px] font-medium transition-colors"
+                        onclick="triggerUpload('image')">
+                        <span class="material-symbols-outlined text-[18px] opacity-60">image</span>
+                        Add Image
+                    </button>
+                    <button
+                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-os-ink/5 rounded-lg text-[12px] font-medium transition-colors"
+                        onclick="triggerUpload('web')">
+                        <span class="material-symbols-outlined text-[18px] opacity-60">search</span>
+                        Web Search
+                    </button>
+                </div>
+                <div class="max-w-4xl mx-auto relative group">
+                    <!-- Preview Pills Container -->
+                    <div class="flex flex-wrap items-center gap-3 mb-4 hidden" id="preview-container">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                    <button
+                        class="absolute left-4 top-1/2 -translate-y-1/2 text-secondary hover:text-os-ink transition-colors flex items-center justify-center z-10"
+                        id="clip-btn" title="Attach file">
+                        <span class="material-symbols-outlined text-[20px]">attach_file</span>
+                    </button>
+                    <input
+                        class="w-full bg-os-bg border border-os-border rounded-full pr-40 py-4 text-os-ink text-[14px] placeholder:opacity-50 focus:border-os-ink/20 focus:ring-0 transition-all outline-none pl-12"
+                        id="chat-input" placeholder="Ask Developer anything it remembers..." type="text" />
+                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                        <button id="btn-run-improve"
+                            class="flex items-center gap-2 bg-os-surface hover:bg-os-border/20 px-4 py-2 rounded-full text-[10px] font-mono text-os-ink transition-colors border border-os-border tracking-tight">
+                            <svg class="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                            Run improve()
+                        </button>
+                        <button id="btn-send-message"
+                            class="w-10 h-10 bg-os-ink hover:opacity-90 flex items-center justify-center rounded-full transition-all text-os-surface shadow-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- BEGIN: Right Sidebar (Memory) -->
+        <aside
+            class="w-80 flex-shrink-0 border-l border-os-border bg-os-surface flex flex-col transition-colors duration-300">
+            <div class="flex border-b border-os-border">
+                <button id="tab-memory"
+                    class="flex-1 py-4 text-[10px] font-mono uppercase tracking-widest border-b-2 border-os-ink font-semibold">Memory</button>
+            </div>
+            <!-- Memory Tab panel -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-10" id="panel-memory">
+                <!-- Graph Visualization Block -->
+                <div class="relative">
+                    <div class="flex items-center justify-between mb-5">
+                        <span class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Context
+                            Neighborhood</span>
+                        <button
+                            class="text-[10px] font-mono text-secondary flex items-center gap-1.5 hover:text-os-ink transition-colors"
+                            onclick="document.getElementById('graph-overlay').classList.remove('hidden')">
+                            Expand
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="aspect-square bg-os-bg rounded-xl flex items-center justify-center border border-os-border relative overflow-hidden group"
+                        id="graph-container">
+                        <div class="relative w-full h-full p-2 text-os-ink flex items-center justify-center"
+                            id="dynamic-graph-svg">
+                            <!-- Injected SVG -->
+                        </div>
+                    </div>
+                    <button id="btn-promote-permanent"
+                        class="w-full mt-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-mono font-medium transition-all flex items-center justify-center gap-2 shadow-sm"
+                        onclick="promoteSessionToPermanent()">
+                        <span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+                        Promote to Permanent Graph
+                    </button>
+                </div>
+                <!-- Context Info Section -->
+                <section>
+                    <h3 class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus mb-4">Context &amp;
+                        Reason</h3>
+                    <div id="why-knows-text"
+                        class="bg-os-bg border border-os-border p-4 rounded-xl text-[11px] text-secondary leading-relaxed italic font-mono">
+                        Traverse graph relationships by querying the persistent graph nodes directly.
+                    </div>
+                </section>
+                <!-- Ingested Memories List -->
+                <section class="space-y-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-[10px] font-mono text-secondary uppercase tracking-widest-plus">Ingested
+                            Memories List</h3>
+                    </div>
+                    <div class="relative mb-6">
+                        <input id="memory-search"
+                            class="w-full bg-os-bg border border-os-border rounded-full py-2 px-4 text-[11px] font-mono focus:ring-0 focus:border-os-ink/20 placeholder:opacity-50"
+                            placeholder="Search memories..." type="text" />
+                    </div>
+                    <div class="space-y-4" id="memories-container">
+                        <!-- Memory Card list -->
+                    </div>
+                </section>
+            </div>
+
+            </div>
+        </aside>
+    </div>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            themeIcon.innerText = isDark ? 'light_mode' : 'dark_mode';
+            themeText.innerText = isDark ? 'Theme: Dark' : 'Theme: Light';
+        }
+
+        // --- Attachment Logic ---
+        const clipBtn = document.getElementById('clip-btn');
+        const attachmentMenu = document.getElementById('attachment-menu');
+        const previewContainer = document.getElementById('preview-container');
+        const chatInput = document.getElementById('chat-input');
+
+        clipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            attachmentMenu.classList.toggle('hidden');
         });
-        whyKnowsText.textContent = `Retrieved context related to query based on vector semantic matching. Context matched ${data.context_used.length} nodes in session graph.`;
-      } else {
-        retrievedContainer.innerHTML = '<div style="font-size:12px; color:var(--text-2); padding:10px;">No facts retrieved this turn.</div>';
-        whyKnowsText.textContent = 'No prior context was pulled. Ingest more facts using Learning mode to seed the shared memories.';
-      }
 
-      chatScroll.scrollTop = chatScroll.scrollHeight;
-      updateWorkspace();
-    } else {
-      const errText = await res.text();
-      const aiMsg = document.createElement('div');
-      aiMsg.className = 'msg ai shallow';
-      aiMsg.innerHTML = `<div class="msg-bubble" style="color:var(--amber);">⚠️ Backend Request Failed: ${errText}</div>`;
-      chatScroll.appendChild(aiMsg);
-      chatScroll.scrollTop = chatScroll.scrollHeight;
-    }
-    compInput.disabled = false;
-    compInput.focus();
-  }
+        document.addEventListener('click', () => {
+            attachmentMenu.classList.add('hidden');
+        });
 
-  // Bind Composer Input & Send Button
-  document.getElementById('btn-send-message').addEventListener('click', sendMessage);
-  compInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') sendMessage();
-  });
+        function triggerUpload(type) {
+            const fileName = type === 'web' ? 'web_results.json' : (type === 'image' ? 'screenshot_01.png' : 'neural_architecture.pdf');
+            const icon = type === 'web' ? 'search' : (type === 'image' ? 'image' : 'description');
+            addPreviewPill(fileName, icon);
+            attachmentMenu.classList.add('hidden');
+        }
 
-  // ---- improve() animation sequence ----
-  document.getElementById('btn-trigger-improve').addEventListener('click', async () => {
-    if (!activeSessionId) return;
+        function addPreviewPill(name, iconName) {
+            previewContainer.classList.remove('hidden');
+            const pill = document.createElement('div');
+            pill.className = "flex items-center gap-3 px-4 py-2 bg-os-bg border border-os-border rounded-full font-mono text-[11px] text-os-ink shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300";
+            pill.innerHTML = `
+              <span class="material-symbols-outlined text-[16px] opacity-60">${iconName}</span>
+              <div class="flex flex-col">
+                <span class="leading-none">${name}</span>
+                <div class="w-24 h-1 bg-os-border rounded-full mt-1.5 overflow-hidden">
+                  <div class="h-full bg-os-ink w-full rounded-full transition-all duration-700"></div>
+                </div>
+              </div>
+              <button class="ml-2 text-secondary hover:text-os-ink transition-colors flex items-center justify-center remove-pill">
+                <span class="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            `;
+            pill.querySelector('.remove-pill').addEventListener('click', () => {
+                pill.remove();
+                if (previewContainer.children.length === 0) {
+                    previewContainer.classList.add('hidden');
+                }
+            });
+            previewContainer.appendChild(pill);
+        }
 
-    const banner = document.getElementById('improve-banner');
-    banner.style.display = 'flex';
-    document.getElementById('improve-fill').style.width = '0%';
-    document.getElementById('improve-title').textContent = 'Consolidating session cache...';
-    document.getElementById('improve-done').classList.remove('show');
-    document.getElementById('stat-1').classList.remove('show');
-    document.getElementById('stat-2').classList.remove('show');
-    document.getElementById('stat-3').classList.remove('show');
+        chatInput.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let imagePasted = false;
+            for (const item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    imagePasted = true;
+                    addPreviewPill('pasted_image.png', 'image');
+                }
+            }
+        });
 
-    // Trigger backend POST
-    const resPromise = fetch('/api/memory/improve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify([activeSessionId])
-    });
+        window.onload = () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            themeIcon.innerText = isDark ? 'light_mode' : 'dark_mode';
+            themeText.innerText = isDark ? 'Theme: Dark' : 'Theme: Light';
 
-    // Start progress animations
-    setTimeout(() => {
-      document.getElementById('improve-fill').style.width = '100%';
-    }, 50);
+            // Start backend integration flows
+            initApp();
+        };
 
-    setTimeout(() => {
-      document.getElementById('stat-1').classList.add('show');
-      document.getElementById('stat-1').querySelector('.num').textContent = '1';
-    }, 600);
-    setTimeout(() => {
-      document.getElementById('stat-2').classList.add('show');
-      document.getElementById('stat-2').querySelector('.num').textContent = '3';
-    }, 1200);
-    setTimeout(() => {
-      document.getElementById('stat-3').classList.add('show');
-      document.getElementById('stat-3').querySelector('.num').textContent = 'Complete';
-    }, 1800);
+        // --- BACKEND WORKFLOW INTEGRATION ---
+        let activeSessionId = localStorage.getItem('memoryos_active_session') || '';
+        let activeSpecialist = 'developer'; // developer, learner, researcher, planner
 
-    const apiRes = await resPromise;
+        const specialistData = {
+            developer: {
+                crumb: "Specialist / Developer",
+                title: "Developer reasons over the shared graph",
+                desc: "Currently grounded in persistent session graph + conceptual notes from Learning",
+                placeholder: "Ask Developer anything it remembers..."
+            },
+            learner: {
+                crumb: "Specialist / Learning",
+                title: "Ingest facts and conceptual knowledge",
+                desc: "Feed the persistent memory graph with new context and structured information",
+                placeholder: "Type a fact or detail to ingest into memory..."
+            },
+            researcher: {
+                crumb: "Specialist / Researcher",
+                title: "Research and synthesize concepts",
+                desc: "Deep conceptual lookup across the memories with synthesized summaries",
+                placeholder: "Search for concepts or ask Researcher to synthesize summaries..."
+            },
+            planner: {
+                crumb: "Specialist / Planner",
+                title: "Generate memory-grounded roadmaps",
+                desc: "Strategic planning and timeline outlining based on historic memories",
+                placeholder: "Ask Planner to structure a roadmap or plan..."
+            }
+        };
 
-    setTimeout(() => {
-      document.getElementById('improve-spinner').style.display = 'none';
-      document.getElementById('improve-title').textContent = 'Memory evolution complete';
-      document.getElementById('improve-done').classList.add('show');
-    }, 2200);
+        async function initApp() {
+            setupSpecialistButtons();
+            setupTabSwapping();
+            setupSearchMemory();
+            await loadSessions();
 
-    setTimeout(() => {
-      banner.style.display = 'none';
-      updateWorkspace();
-    }, 4500);
-  });
+            document.getElementById('btn-new-session').addEventListener('click', createSession);
+            document.getElementById('btn-send-message').addEventListener('click', sendMessage);
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            document.getElementById('btn-run-improve').addEventListener('click', runImprovement);
+        }
 
-  // ---- Tab Swapping ----
-  document.querySelectorAll('.panel-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const isMemory = tab.dataset.tab === 'memory';
-      document.getElementById('panel-memory').style.display = isMemory ? 'block' : 'none';
-      document.getElementById('panel-timeline').style.display = isMemory ? 'none' : 'block';
-    });
-  });
+        // 1. Session Manager Links
+        async function loadSessions() {
+            try {
+                const res = await fetch('/api/sessions');
+                if (res.ok) {
+                    const sessions = await res.json();
+                    const container = document.getElementById('session-list');
+                    container.innerHTML = '';
 
-  // Handle Projects and Settings Click
-  document.querySelectorAll('.nav-item.disabled').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      alert('Coming Soon: This module is scheduled for Milestone 6.');
-    });
-  });
+                    if (sessions.length === 0) {
+                        // Create default session if none exist
+                        await createSession();
+                        return;
+                    }
 
-  // Initial load
-  loadSessions();
-</script>
+                    // Verify if activeSessionId is still valid
+                    const exists = sessions.some(s => s.session_id === activeSessionId);
+                    if (!exists && sessions.length > 0) {
+                        activeSessionId = sessions[0].session_id;
+                        localStorage.setItem('memoryos_active_session', activeSessionId);
+                    }
 
+                    sessions.forEach(sess => {
+                        const sessItem = document.createElement('div');
+                        const isActive = sess.session_id === activeSessionId;
+                        sessItem.className = `flex items-center justify-between px-4 py-2.5 rounded-full cursor-pointer transition-all text-[12px] group ${
+                            isActive ? 'bg-os-ink text-os-surface font-semibold shadow-sm' : 'text-secondary hover:bg-os-ink/5 hover:text-os-ink'
+                        }`;
+                        
+                        const shortId = sess.session_id.substring(0, 8).toUpperCase();
+                        sessItem.innerHTML = `
+                            <span class="truncate flex-1" onclick="selectSession('${sess.session_id}')">Sess-${shortId}</span>
+                            <button class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 ml-2 transition-opacity p-0.5" onclick="handleDeleteSession(event, '${sess.session_id}')" title="Delete Session">
+                                <span class="material-symbols-outlined text-[14px]">delete</span>
+                            </button>
+                        `;
+                        container.appendChild(sessItem);
+                    });
+
+                    switchSession();
+                }
+            } catch (err) {
+                console.error("Failed to load sessions:", err);
+            }
+        }
+
+        window.selectSession = function(sessionId) {
+            activeSessionId = sessionId;
+            localStorage.setItem('memoryos_active_session', activeSessionId);
+            loadSessions();
+        }
+
+        window.handleDeleteSession = async function(e, sessionId) {
+            e.stopPropagation();
+            if (!confirm("Are you sure you want to delete this session?")) return;
+            try {
+                const res = await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    if (activeSessionId === sessionId) {
+                        activeSessionId = '';
+                        localStorage.removeItem('memoryos_active_session');
+                    }
+                    await loadSessions();
+                }
+            } catch (err) {
+                console.error("Failed to delete session:", err);
+            }
+        }
+
+        async function createSession() {
+            try {
+                const res = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ metadata: { source: "web_client" } })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    activeSessionId = data.session_id;
+                    localStorage.setItem('memoryos_active_session', activeSessionId);
+                    await loadSessions();
+                }
+            } catch (err) {
+                console.error("Failed to create session:", err);
+            }
+        }
+
+        function switchSession() {
+            // Clear messages
+            document.getElementById('chat-messages-container').innerHTML = '';
+            // Refresh memories and graph
+            refreshWorkspaceData();
+        }
+
+        function refreshWorkspaceData() {
+            loadMemories();
+            loadKnowledgeGraph();
+        }
+
+        // 2. Specialists Navigation and Switch
+        function setupSpecialistButtons() {
+            const buttons = document.querySelectorAll('#specialists-list button');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    buttons.forEach(b => {
+                        b.className = "w-full flex items-center justify-between px-4 py-2.5 text-[13px] text-secondary hover:text-os-ink transition-colors rounded-full";
+                        const span = b.querySelector('.flex span');
+                        if (span) span.className = "w-1.5 h-1.5 border border-secondary rounded-full";
+                    });
+
+                    btn.className = "w-full flex items-center justify-between px-4 py-2.5 bg-os-ink text-os-surface rounded-full text-[13px] transition-colors duration-300";
+                    const activeSpan = btn.querySelector('.flex span');
+                    if (activeSpan) activeSpan.className = "w-1.5 h-1.5 bg-os-surface rounded-full transition-colors duration-300";
+
+                    activeSpecialist = btn.dataset.specialist;
+                    updateSpecialistWorkspace();
+                });
+            });
+
+            // Soon items link warning
+            document.querySelectorAll('.soon-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert("Module 'Projects & Settings' scheduled for post-hackathon build. Coming soon!");
+                });
+            });
+        }
+
+        function updateSpecialistWorkspace() {
+            const data = specialistData[activeSpecialist] || specialistData.developer;
+            document.getElementById('crumb-specialist').textContent = data.crumb;
+            document.getElementById('workspace-title').textContent = data.title;
+            document.getElementById('workspace-desc').textContent = data.desc;
+            chatInput.placeholder = data.placeholder;
+        }
+
+        // 3. Chat and Workflow Submissions
+        async function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text || !activeSessionId) return;
+
+            chatInput.value = '';
+
+            // Append User Message bubble
+            appendMessage('user', text);
+
+            // Append AI thinking bubble (shallow state)
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = "msg flex flex-col max-w-3xl self-start space-y-2 animate-pulse";
+            thinkingDiv.innerHTML = `
+                <div class="text-[9px] font-mono text-secondary uppercase tracking-widest-plus">MemoryOS is reasoning...</div>
+                <div class="bg-os-surface border border-os-border p-5 rounded-xl text-[13px] max-w-xl italic flex items-center gap-2">
+                    <span class="animate-spin rounded-full h-3 w-3 border-2 border-os-ink border-t-transparent"></span>
+                    <span id="pipeline-status">Searching memory graph...</span>
+                </div>
+            `;
+            document.getElementById('chat-messages-container').appendChild(thinkingDiv);
+            scrollToBottom();
+
+            // Mock cognitive step updates
+            const pipelineStatusText = document.getElementById('pipeline-status');
+            const stepIntervals = [
+                setTimeout(() => { if (pipelineStatusText) pipelineStatusText.textContent = "Ranking retrieved context..."; }, 700),
+                setTimeout(() => { if (pipelineStatusText) pipelineStatusText.textContent = "Applying Cognee memory..."; }, 1400),
+                setTimeout(() => { if (pipelineStatusText) pipelineStatusText.textContent = "Synthesizing answer..."; }, 2100)
+            ];
+
+            let endpoint = '/api/specialists/developer';
+            let reqBody = { session_id: activeSessionId, query: text };
+
+            if (activeSpecialist === 'learner') {
+                endpoint = '/api/specialists/learner';
+                reqBody = { session_id: activeSessionId, text: text };
+            } else if (activeSpecialist === 'researcher') {
+                endpoint = '/api/specialists/researcher';
+                reqBody = { session_id: activeSessionId, query: text };
+            } else if (activeSpecialist === 'planner') {
+                endpoint = '/api/specialists/planner';
+                reqBody = { session_id: activeSessionId, query: text };
+            }
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reqBody)
+                });
+
+                stepIntervals.forEach(clearTimeout);
+                thinkingDiv.remove();
+
+                if (res.ok) {
+                    const data = await res.json();
+                    let answer = data.answer || '';
+                    if (activeSpecialist === 'learner') {
+                        const fact = data.facts_extracted && data.facts_extracted.length > 0 ? data.facts_extracted[0] : text;
+                        answer = `Successfully ingested fact: "${fact}"`;
+                    }
+
+                    const contextCount = data.context_used ? data.context_used.length : 0;
+                    appendMessage('ai', answer, {
+                        hops: contextCount > 0 ? `${contextCount} hops` : '1 hop',
+                        retrievalMode: activeSpecialist === 'learner' ? 'learner_ingest' : 'graph_completion',
+                        specialist: activeSpecialist
+                    });
+
+                    // Refresh graph and memories list
+                    refreshWorkspaceData();
+                } else {
+                    const errMsg = await res.text();
+                    appendMessage('error', `Error: ${errMsg}`);
+                }
+            } catch (err) {
+                stepIntervals.forEach(clearTimeout);
+                thinkingDiv.remove();
+                appendMessage('error', `Connection error: ${err.message}`);
+            }
+        }
+
+        function renderMarkdown(text) {
+            if (typeof marked !== 'undefined' && text) {
+                try {
+                    return marked.parse(text);
+                } catch (e) {
+                    console.error("Markdown parsing failed", e);
+                }
+            }
+            return text || '';
+        }
+
+        function appendMessage(sender, text, meta = null) {
+            const container = document.getElementById('chat-messages-container');
+            const messageDiv = document.createElement('div');
+            const formattedHtml = renderMarkdown(text);
+
+            if (sender === 'user') {
+                messageDiv.className = "msg flex flex-col max-w-3xl self-end space-y-2 align-end text-right items-end";
+                messageDiv.innerHTML = `
+                    <div class="text-[9px] font-mono text-secondary uppercase tracking-widest-plus">You</div>
+                    <div class="prose prose-invert prose-sm bg-os-ink text-os-surface px-5 py-3 rounded-xl text-[13.5px] max-w-xl text-left border border-os-ink shadow-sm">
+                        ${formattedHtml}
+                    </div>
+                `;
+            } else if (sender === 'ai') {
+                const tagColor = meta.specialist === 'learner' ? 'purple' : 'accent';
+                const isDeep = meta.hops !== '1 hop';
+                const borderClass = isDeep ? "border-l-2 border-indigo-500" : "border-l-2 border-amber-500";
+
+                messageDiv.className = `msg flex flex-col max-w-3xl self-start space-y-2 ${borderClass} pl-4`;
+                messageDiv.innerHTML = `
+                    <div class="text-[9px] font-mono text-secondary uppercase tracking-widest-plus">MemoryOS Specialist / ${meta.specialist.toUpperCase()}</div>
+                    <div class="prose dark:prose-invert prose-sm bg-os-surface border border-os-border p-5 rounded-xl text-[13.5px] max-w-xl leading-relaxed text-os-ink shadow-sm">
+                        ${formattedHtml}
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="text-[8px] bg-os-bg text-secondary px-2 py-0.5 rounded-full uppercase font-mono tracking-technical flex items-center gap-1.5">
+                            <span class="w-1 h-1 bg-os-ink rounded-full"></span> ${meta.hops}
+                        </span>
+                        <span class="text-[8px] border border-os-border text-secondary px-2 py-0.5 rounded-full font-mono tracking-technical">${meta.retrievalMode}</span>
+                    </div>
+                `;
+            } else {
+                messageDiv.className = "msg flex flex-col max-w-3xl self-start space-y-2 pl-4 border-l-2 border-red-500";
+                messageDiv.innerHTML = `
+                    <div class="text-[9px] font-mono text-red-500 uppercase tracking-widest-plus">System Error</div>
+                    <div class="prose prose-sm bg-os-surface border border-red-200 p-5 rounded-xl text-[13.5px] max-w-xl text-red-700 font-mono shadow-sm">
+                        ${formattedHtml}
+                    </div>
+                `;
+            }
+
+            container.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const chatScroll = document.getElementById('chat-scroll');
+            chatScroll.scrollTop = chatScroll.scrollHeight;
+        }
+
+        // 4. Memory Tab List and Context Reasons
+        async function loadMemories() {
+            if (!activeSessionId) return;
+            try {
+                const res = await fetch(`/api/memory?session_id=${activeSessionId}`);
+                if (res.ok) {
+                    const memories = await res.json();
+                    renderMemories(memories);
+                }
+            } catch (err) {
+                console.error("Failed to load memories:", err);
+            }
+        }
+
+        function renderMemories(memories) {
+            const container = document.getElementById('memories-container');
+            const whyText = document.getElementById('why-knows-text');
+            container.innerHTML = '';
+
+            if (memories.length === 0) {
+                container.innerHTML = `<div class="text-[11px] text-secondary/60 font-mono italic p-4 text-center">Nothing remembered yet in this session. Ingest facts in Learning mode.</div>`;
+                whyText.textContent = "No prior context was pulled. Ingest more facts using Learning mode to seed the shared memories.";
+                return;
+            }
+
+            whyText.textContent = `Traversing ${memories.length} memories loaded in the session graph. Semantic search routes queries dynamically using vector proximity.`;
+
+            memories.forEach(mem => {
+                const card = document.createElement('div');
+                card.className = "bg-os-surface border border-os-border p-5 rounded-xl group hover:border-os-ink/20 transition-all shadow-sm";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="text-[11.5px] font-medium font-mono leading-relaxed text-os-ink">${mem.text}</h4>
+                        <button class="text-secondary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity delete-mem-btn" data-id="${mem.memory_id}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="text-[8px] bg-os-bg text-secondary px-2 py-0.5 rounded-full uppercase font-mono tracking-technical flex items-center gap-1.5">
+                            <span class="w-1 h-1 bg-os-ink rounded-full"></span> ${mem.specialist}
+                        </span>
+                        <span class="text-[8px] border border-os-border text-secondary px-2 py-0.5 rounded-full font-mono tracking-technical">high</span>
+                    </div>
+                `;
+
+                card.querySelector('.delete-mem-btn').onclick = async (e) => {
+                    e.stopPropagation();
+                    const memId = e.currentTarget.dataset.id;
+                    if (confirm("Delete this memory entry?")) {
+                        await deleteMemory(memId);
+                    }
+                };
+
+                container.appendChild(card);
+            });
+        }
+
+        async function deleteMemory(memoryId) {
+            try {
+                const res = await fetch(`/api/memory/${memoryId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    refreshWorkspaceData();
+                }
+            } catch (err) {
+                console.error("Failed to delete memory:", err);
+            }
+        }
+
+        function setupSearchMemory() {
+            const searchInput = document.getElementById('memory-search');
+            searchInput.addEventListener('input', async (e) => {
+                const val = e.target.value.trim();
+                if (!activeSessionId) return;
+                try {
+                    const url = val ? `/api/memory?session_id=${activeSessionId}&q=${encodeURIComponent(val)}` : `/api/memory?session_id=${activeSessionId}`;
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        const memories = await res.json();
+                        renderMemories(memories);
+                    }
+                } catch (err) {
+                    console.error("Search memory failed:", err);
+                }
+            });
+        }
+
+        // 6. Dynamic Knowledge Graph
+        async function loadKnowledgeGraph() {
+            try {
+                const url = activeSessionId ? `/api/graph/svg?session_id=${activeSessionId}` : '/api/graph/svg';
+                const res = await fetch(url);
+                if (res.ok) {
+                    const svgString = await res.text();
+
+                    // Inject to small viewer
+                    document.getElementById('dynamic-graph-svg').innerHTML = svgString;
+                    makeGraphInteractive('dynamic-graph-svg');
+
+                    // Inject to full screen overlay
+                    document.getElementById('overlay-graph-container').innerHTML = svgString;
+                    makeGraphInteractive('overlay-graph-container');
+
+                    // Update header graph statistics
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(svgString, 'image/svg+xml');
+                    const nodes = doc.querySelectorAll('.node').length;
+                    const edges = doc.querySelectorAll('line').length;
+
+                    const statStr = `${nodes} nodes • ${edges} edges`;
+                    document.getElementById('header-graph-stats').textContent = statStr;
+                    document.getElementById('overlay-graph-stats').textContent = `${nodes} Nodes · ${edges} Edges`;
+                }
+            } catch (err) {
+                console.error("Failed to load knowledge graph:", err);
+            }
+        }
+
+        // Tab Swapping Logic simplified (timeline tab removed)
+        function setupTabSwapping() {
+            const tabMemory = document.getElementById('tab-memory');
+            const panelMemory = document.getElementById('panel-memory');
+
+            tabMemory.addEventListener('click', () => {
+                tabMemory.className = "flex-1 py-4 text-[10px] font-mono uppercase tracking-widest border-b-2 border-os-ink font-semibold";
+                panelMemory.classList.remove('hidden');
+                loadMemories();
+            });
+        }
+
+        // 8. Memory Consolidation / Improve flow
+        async function runImprovement() {
+            if (!activeSessionId) return;
+
+            const banner = document.getElementById('improve-banner');
+            const spinner = document.getElementById('improve-spinner');
+            const title = document.getElementById('improve-title');
+            const done = document.getElementById('improve-done');
+            const fill = document.getElementById('improve-fill');
+            const stat1 = document.getElementById('stat-1');
+            const stat2 = document.getElementById('stat-2');
+            const stat3 = document.getElementById('stat-3');
+
+            // Initial state reset
+            banner.classList.remove('hidden');
+            spinner.style.display = 'block';
+            title.textContent = 'Consolidating session cache...';
+            done.textContent = 'Status: Consolidating';
+            fill.style.width = '0%';
+
+            stat1.classList.add('opacity-40');
+            stat2.classList.add('opacity-40');
+            stat3.classList.add('opacity-40');
+            stat1.querySelector('.num').textContent = '-';
+            stat2.querySelector('.num').textContent = '-';
+            stat3.querySelector('.num').textContent = '-';
+
+            // Trigger POST api
+            const resPromise = fetch('/api/memory/improve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([activeSessionId])
+            });
+
+            // Staggered UI animations
+            setTimeout(() => { fill.style.width = '30%'; }, 200);
+
+            setTimeout(() => {
+                fill.style.width = '60%';
+                stat1.classList.remove('opacity-40');
+                stat1.querySelector('.num').textContent = Math.floor(Math.random() * 5) + 3;
+            }, 800);
+
+            setTimeout(() => {
+                fill.style.width = '85%';
+                stat2.classList.remove('opacity-40');
+                stat2.querySelector('.num').textContent = Math.floor(Math.random() * 4) + 2;
+            }, 1600);
+
+            try {
+                const res = await resPromise;
+                if (res.ok) {
+                    setTimeout(() => {
+                        fill.style.width = '100%';
+                        stat3.classList.remove('opacity-40');
+                        stat3.querySelector('.num').textContent = 'Optimized';
+
+                        spinner.style.display = 'none';
+                        title.textContent = 'Memory evolution complete';
+                        done.textContent = 'Status: Complete';
+                    }, 2400);
+
+                    setTimeout(() => {
+                        banner.classList.add('hidden');
+                        refreshWorkspaceData();
+                    }, 4800);
+                } else {
+                    const err = await res.text();
+                    title.textContent = `Consolidation failed: ${err}`;
+                    spinner.style.display = 'none';
+                    done.textContent = 'Status: Error';
+                }
+            } catch (err) {
+                title.textContent = `Network error: ${err.message}`;
+                spinner.style.display = 'none';
+                done.textContent = 'Status: Error';
+            }
+        }
+
+        window.showNodeDetails = function(el) {
+            const label = el.getAttribute('data-label') || '';
+            const type = el.getAttribute('data-type') || '';
+            const color = el.getAttribute('data-color') || '';
+            const text = el.getAttribute('data-text') || '';
+            
+            const isPermanentOverlay = !document.getElementById('permanent-graph-overlay').classList.contains('hidden');
+            
+            const panel = document.getElementById(isPermanentOverlay ? 'permanent-node-details-panel' : 'node-details-panel');
+            const content = document.getElementById(isPermanentOverlay ? 'permanent-node-details-content' : 'node-details-content');
+            const graphContainer = document.getElementById(isPermanentOverlay ? 'permanent-graph-container' : 'overlay-graph-container');
+            
+            if (isPermanentOverlay) {
+                const pPanel = document.getElementById('permanent-node-details-panel');
+                pPanel.classList.remove('hidden');
+                pPanel.classList.add('flex');
+                
+                const pContainer = document.getElementById('permanent-graph-container');
+                pContainer.classList.add('lg:w-3/5');
+                
+                const pContent = document.getElementById('permanent-node-details-content');
+                pContent.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="w-3.5 h-3.5 rounded-full shadow-sm" style="background-color: ${color}"></span>
+                            <h3 class="text-base font-heading font-semibold text-os-ink">${label}</h3>
+                        </div>
+                        
+                        <div class="bg-os-bg/50 border border-os-border/60 rounded-xl p-4 space-y-3">
+                            <div>
+                                <span class="text-[9px] font-mono uppercase text-secondary tracking-widest-plus block mb-0.5">Node Type</span>
+                                <span class="text-xs font-semibold px-2 py-0.5 bg-os-ink/5 border border-os-border rounded-full font-mono text-os-ink">${type}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <span class="text-[9px] font-mono uppercase text-secondary tracking-widest-plus block">Node Contents / Fact</span>
+                            <div class="prose dark:prose-invert prose-sm bg-os-bg border border-os-border p-5 rounded-xl text-xs leading-relaxed text-secondary break-words select-text overflow-auto max-h-[60vh] max-w-full">
+                                ${renderMarkdown(text) || 'No text content available.'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                panel.classList.remove('hidden');
+                panel.classList.add('flex');
+                
+                if (graphContainer) {
+                    graphContainer.classList.add('lg:w-3/5');
+                }
+                
+                const formattedText = renderMarkdown(text);
+                
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="w-3.5 h-3.5 rounded-full shadow-sm" style="background-color: ${color}"></span>
+                            <h3 class="text-base font-heading font-semibold text-os-ink">${label}</h3>
+                        </div>
+                        
+                        <div class="bg-os-bg/50 border border-os-border/60 rounded-xl p-4 space-y-3">
+                            <div>
+                                <span class="text-[9px] font-mono uppercase text-secondary tracking-widest-plus block mb-0.5">Node Type</span>
+                                <span class="text-xs font-semibold px-2 py-0.5 bg-os-ink/5 border border-os-border rounded-full font-mono text-os-ink">${type}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <span class="text-[9px] font-mono uppercase text-secondary tracking-widest-plus block">Node Contents / Fact</span>
+                            <div class="prose dark:prose-invert prose-sm bg-os-bg border border-os-border p-5 rounded-xl text-xs leading-relaxed text-secondary break-words select-text overflow-auto max-h-[60vh] max-w-full">
+                                ${formattedText || 'No text content available.'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        window.closeNodeDetails = function() {
+            const panel = document.getElementById('node-details-panel');
+            const content = document.getElementById('node-details-content');
+            const graphContainer = document.getElementById('overlay-graph-container');
+            
+            if (panel) {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+            }
+            
+            if (graphContainer) {
+                graphContainer.classList.remove('lg:w-3/5');
+            }
+            
+            if (content) {
+                content.innerHTML = `
+                    <div class="text-center py-12 text-secondary/60 font-mono italic text-[11px]">
+                        Click on any node in the graph to inspect its properties and facts.
+                    </div>
+                `;
+            }
+        }
+
+        window.closePermanentNodeDetails = function() {
+            const panel = document.getElementById('permanent-node-details-panel');
+            const content = document.getElementById('permanent-node-details-content');
+            const graphContainer = document.getElementById('permanent-graph-container');
+            
+            if (panel) {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+            }
+            
+            if (graphContainer) {
+                graphContainer.classList.remove('lg:w-3/5');
+            }
+            
+            if (content) {
+                content.innerHTML = `
+                    <div class="text-center py-12 text-secondary/60 font-mono italic text-[11px]">
+                        Click on any node in the permanent graph to inspect.
+                    </div>
+                `;
+            }
+        }
+
+        window.promoteSessionToPermanent = async function() {
+            if (!activeSessionId) {
+                alert("Please select or create an active session first.");
+                return;
+            }
+            const btn = document.getElementById('btn-promote-permanent');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent inline-block mr-1"></span> Promoting...`;
+            
+            try {
+                const res = await fetch('/api/graph/promote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: activeSessionId })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    alert(data.message || "Session graph successfully promoted to the Permanent Graph!");
+                } else {
+                    const err = await res.text();
+                    alert(`Promotion failed: ${err}`);
+                }
+            } catch (err) {
+                alert(`Network error during promotion: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        window.openPermanentGraph = function() {
+            document.getElementById('permanent-graph-overlay').classList.remove('hidden');
+            loadPermanentGraph();
+        }
+
+        function makeGraphInteractive(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const svg = container.querySelector('svg');
+            if (!svg) return;
+
+            // Setup mode toggles dynamically
+            let activeMode = 'static'; // 'static' or 'flow'
+            let toggle = container.querySelector('.graph-mode-toggle');
+            if (!toggle) {
+                toggle = document.createElement('div');
+                toggle.className = 'graph-mode-toggle absolute top-4 right-4 z-10 flex gap-1 bg-os-surface/80 backdrop-blur border border-os-border rounded-full p-0.5 text-[10px] font-mono shadow-sm';
+                toggle.innerHTML = `
+                    <button class="px-2.5 py-1 rounded-full bg-os-ink text-os-surface font-semibold btn-static-mode">Static</button>
+                    <button class="px-2.5 py-1 rounded-full text-secondary hover:text-os-ink btn-flow-mode">Flow</button>
+                `;
+                container.appendChild(toggle);
+            }
+
+            const btnStatic = toggle.querySelector('.btn-static-mode');
+            const btnFlow = toggle.querySelector('.btn-flow-mode');
+
+            function setMode(mode) {
+                activeMode = mode;
+                if (mode === 'static') {
+                    btnStatic.className = "px-2.5 py-1 rounded-full bg-os-ink text-os-surface font-semibold btn-static-mode";
+                    btnFlow.className = "px-2.5 py-1 rounded-full text-secondary hover:text-os-ink btn-flow-mode";
+                } else {
+                    btnStatic.className = "px-2.5 py-1 rounded-full text-secondary hover:text-os-ink btn-static-mode";
+                    btnFlow.className = "px-2.5 py-1 rounded-full bg-os-ink text-os-surface font-semibold btn-flow-mode";
+                }
+            }
+
+            btnStatic.onclick = (e) => { e.stopPropagation(); setMode('static'); };
+            btnFlow.onclick = (e) => { e.stopPropagation(); setMode('flow'); };
+
+            // Setup Zoom Controls Overlay dynamically
+            let zoomControls = container.querySelector('.graph-zoom-controls');
+            if (!zoomControls) {
+                zoomControls = document.createElement('div');
+                zoomControls.className = 'graph-zoom-controls absolute bottom-4 right-4 z-10 flex gap-1 bg-os-surface/80 backdrop-blur border border-os-border rounded-full p-0.5 text-[12px] font-mono shadow-sm';
+                zoomControls.innerHTML = `
+                    <button class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-os-border btn-zoom-in font-bold cursor-pointer">+</button>
+                    <button class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-os-border btn-zoom-out font-bold cursor-pointer">-</button>
+                `;
+                container.appendChild(zoomControls);
+            }
+
+            // Panning & Zoom Viewport
+            let isPanning = false;
+            let startX, startY;
+            let viewBoxStr = svg.getAttribute('viewBox') || '0 0 700 450';
+            let viewBoxVals = viewBoxStr.split(' ').map(Number);
+            let viewBox = { x: viewBoxVals[0], y: viewBoxVals[1], width: viewBoxVals[2], height: viewBoxVals[3] };
+            let currentX = viewBox.x;
+            let currentY = viewBox.y;
+
+            function updateViewBox() {
+                svg.setAttribute('viewBox', `${viewBox.x.toFixed(1)} ${viewBox.y.toFixed(1)} ${viewBox.width.toFixed(1)} ${viewBox.height.toFixed(1)}`);
+            }
+
+            function zoom(factor, centerX, centerY) {
+                const newWidth = viewBox.width * factor;
+                const newHeight = viewBox.height * factor;
+                const dx = (viewBox.width - newWidth) * (centerX / viewBox.width);
+                const dy = (viewBox.height - newHeight) * (centerY / viewBox.height);
+                
+                viewBox.x += dx;
+                viewBox.y += dy;
+                viewBox.width = newWidth;
+                viewBox.height = newHeight;
+                updateViewBox();
+                currentX = viewBox.x;
+                currentY = viewBox.y;
+            }
+
+            zoomControls.querySelector('.btn-zoom-in').onclick = (e) => {
+                e.stopPropagation();
+                zoom(0.85, viewBox.width / 2, viewBox.height / 2);
+            };
+            zoomControls.querySelector('.btn-zoom-out').onclick = (e) => {
+                e.stopPropagation();
+                zoom(1.15, viewBox.width / 2, viewBox.height / 2);
+            };
+
+            // Keyboard and Wheel Zooming
+            let isHovered = false;
+            container.addEventListener('mouseenter', () => { isHovered = true; });
+            container.addEventListener('mouseleave', () => { isHovered = false; });
+
+            svg.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = svg.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const factor = e.deltaY > 0 ? 1.05 : 0.95;
+                zoom(factor, mouseX, mouseY);
+            }, { passive: false });
+
+            window.addEventListener('keydown', (e) => {
+                if (isHovered && e.ctrlKey && (e.key === '=' || e.key === '+' || e.key === '-')) {
+                    e.preventDefault();
+                    const factor = (e.key === '-') ? 1.1 : 0.9;
+                    zoom(factor, viewBox.width / 2, viewBox.height / 2);
+                }
+            });
+
+            // Panning on background
+            svg.addEventListener('mousedown', (e) => {
+                if (e.target === svg || e.target.tagName === 'line' || e.target.tagName === 'svg') {
+                    isPanning = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    svg.style.cursor = 'grabbing';
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isPanning) {
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    const rect = svg.getBoundingClientRect();
+                    const scaleX = viewBox.width / rect.width;
+                    const scaleY = viewBox.height / rect.height;
+                    
+                    svg.setAttribute('viewBox', `${currentX - dx * scaleX} ${currentY - dy * scaleY} ${viewBox.width} ${viewBox.height}`);
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isPanning) {
+                    isPanning = false;
+                    svg.style.cursor = 'default';
+                    let currentVb = svg.getAttribute('viewBox').split(' ').map(Number);
+                    currentX = currentVb[0];
+                    currentY = currentVb[1];
+                    viewBox.x = currentX;
+                    viewBox.y = currentY;
+                }
+            });
+
+            // Node Dragging & Flow Physics setup
+            const nodes = svg.querySelectorAll('.node');
+            const edges = [];
+            svg.querySelectorAll('line').forEach(line => {
+                edges.push({
+                    element: line,
+                    source: line.getAttribute('data-source'),
+                    target: line.getAttribute('data-target')
+                });
+            });
+
+            const nodePositions = new Map();
+            nodes.forEach(node => {
+                const id = node.getAttribute('data-id');
+                const transformAttr = node.getAttribute('transform') || 'translate(0,0)';
+                const translateMatch = transformAttr.match(/translate\(([^,]+),([^)]+)\)/);
+                const x = translateMatch ? parseFloat(translateMatch[1]) : 0;
+                const y = translateMatch ? parseFloat(translateMatch[2]) : 0;
+                nodePositions.set(id, { element: node, x: x, y: y });
+            });
+
+            // Auto-fit optimal zoom as default as per graph size
+            if (nodePositions.size > 0) {
+                let minX = Infinity, maxX = -Infinity;
+                let minY = Infinity, maxY = -Infinity;
+                nodePositions.forEach(pos => {
+                    if (pos.x < minX) minX = pos.x;
+                    if (pos.x > maxX) maxX = pos.x;
+                    if (pos.y < minY) minY = pos.y;
+                    if (pos.y > maxY) maxY = pos.y;
+                });
+
+                if (minX !== Infinity && maxX !== -Infinity && minY !== Infinity && maxY !== -Infinity) {
+                    const padding = 80;
+                    const graphWidth = (maxX - minX) + padding * 2;
+                    const graphHeight = (maxY - minY) + padding * 2;
+                    const centerX = minX + (maxX - minX) / 2;
+                    const centerY = minY + (maxY - minY) / 2;
+                    
+                    const rect = svg.getBoundingClientRect();
+                    const containerWidth = rect.width || 700;
+                    const containerHeight = rect.height || 450;
+                    const containerRatio = (rect.width && rect.height) ? (rect.width / rect.height) : (700 / 450);
+                    
+                    let finalWidth = graphWidth;
+                    let finalHeight = graphHeight;
+                    
+                    if (graphWidth / graphHeight > containerRatio) {
+                        finalHeight = graphWidth / containerRatio;
+                    } else {
+                        finalWidth = graphHeight * containerRatio;
+                    }
+                    
+                    viewBox.x = centerX - finalWidth / 2;
+                    viewBox.y = centerY - finalHeight / 2;
+                    viewBox.width = finalWidth;
+                    viewBox.height = finalHeight;
+                    updateViewBox();
+                    currentX = viewBox.x;
+                    currentY = viewBox.y;
+                }
+            }
+
+            nodes.forEach(node => {
+                let isDragging = false;
+                let dragStartMouseX, dragStartMouseY;
+                let dragStartNodeX, dragStartNodeY;
+                const nodeId = node.getAttribute('data-id');
+
+                node.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    isDragging = true;
+                    dragStartMouseX = e.clientX;
+                    dragStartMouseY = e.clientY;
+                    const pos = nodePositions.get(nodeId);
+                    if (pos) {
+                        dragStartNodeX = pos.x;
+                        dragStartNodeY = pos.y;
+                    }
+                    node.style.cursor = 'grabbing';
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (isDragging) {
+                        const dx = e.clientX - dragStartMouseX;
+                        const dy = e.clientY - dragStartMouseY;
+                        
+                        const rect = svg.getBoundingClientRect();
+                        const scaleX = viewBox.width / rect.width;
+                        const scaleY = viewBox.height / rect.height;
+
+                        const newX = dragStartNodeX + dx * scaleX;
+                        const newY = dragStartNodeY + dy * scaleY;
+
+                        const pos = nodePositions.get(nodeId);
+                        if (pos) {
+                            pos.x = newX;
+                            pos.y = newY;
+                        }
+
+                        if (activeMode === 'flow') {
+                            // Flow physics simulation step
+                            const restLength = 80;
+                            const k = 0.15; // spring constant
+                            const repulsion = 1800; // repulsion constant
+                            
+                            for (let step = 0; step < 6; step++) {
+                                // Repulsion between all node pairs
+                                const nodesArray = Array.from(nodePositions.values());
+                                for (let i = 0; i < nodesArray.length; i++) {
+                                    for (let j = i + 1; j < nodesArray.length; j++) {
+                                        const n1 = nodesArray[i];
+                                        const n2 = nodesArray[j];
+                                        const id1 = n1.element.getAttribute('data-id');
+                                        const id2 = n2.element.getAttribute('data-id');
+                                        
+                                        const ndx = n1.x - n2.x;
+                                        const ndy = n1.y - n2.y;
+                                        const dist = Math.hypot(ndx, ndy) || 1.0;
+                                        if (dist < 140) {
+                                            const force = repulsion / (dist * dist);
+                                            const fx = (ndx / dist) * force;
+                                            const fy = (ndy / dist) * force;
+                                            
+                                            if (id1 !== nodeId) {
+                                                n1.x += fx;
+                                                n1.y += fy;
+                                            }
+                                            if (id2 !== nodeId) {
+                                                n2.x -= fx;
+                                                n2.y -= fy;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Edge Attraction (Springs)
+                                edges.forEach(edge => {
+                                    const n1 = nodePositions.get(edge.source);
+                                    const n2 = nodePositions.get(edge.target);
+                                    if (n1 && n2) {
+                                        const ndx = n2.x - n1.x;
+                                        const ndy = n2.y - n1.y;
+                                        const dist = Math.hypot(ndx, ndy) || 1.0;
+                                        const delta = dist - restLength;
+                                        const force = delta * k;
+                                        const fx = (ndx / dist) * force;
+                                        const fy = (ndy / dist) * force;
+                                        
+                                        if (edge.source !== nodeId) {
+                                            n1.x += fx;
+                                            n1.y += fy;
+                                        }
+                                        if (edge.target !== nodeId) {
+                                            n2.x -= fx;
+                                            n2.y -= fy;
+                                        }
+                                    }
+                                });
+                            }
+
+                            // Update all elements in DOM
+                            nodePositions.forEach((p, id) => {
+                                p.element.setAttribute('transform', `translate(${p.x.toFixed(1)},${p.y.toFixed(1)})`);
+                            });
+                            edges.forEach(edge => {
+                                const n1 = nodePositions.get(edge.source);
+                                const n2 = nodePositions.get(edge.target);
+                                if (n1 && n2) {
+                                    edge.element.setAttribute('x1', n1.x.toFixed(1));
+                                    edge.element.setAttribute('y1', n1.y.toFixed(1));
+                                    edge.element.setAttribute('x2', n2.x.toFixed(1));
+                                    edge.element.setAttribute('y2', n2.y.toFixed(1));
+                                }
+                            });
+                        } else {
+                            // Static mode - just move the dragged node and update its lines
+                            node.setAttribute('transform', `translate(${newX.toFixed(1)},${newY.toFixed(1)})`);
+                            const sourceLines = svg.querySelectorAll(`line[data-source="${nodeId}"]`);
+                            sourceLines.forEach(line => {
+                                line.setAttribute('x1', newX.toFixed(1));
+                                line.setAttribute('y1', newY.toFixed(1));
+                            });
+                            const targetLines = svg.querySelectorAll(`line[data-target="${nodeId}"]`);
+                            targetLines.forEach(line => {
+                                line.setAttribute('x2', newX.toFixed(1));
+                                line.setAttribute('y2', newY.toFixed(1));
+                            });
+                        }
+                    }
+                });
+
+                window.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        node.style.cursor = 'pointer';
+                        // Record final positions
+                        nodePositions.forEach((p, id) => {
+                            const transformAttr = p.element.getAttribute('transform') || 'translate(0,0)';
+                            const translateMatch = transformAttr.match(/translate\(([^,]+),([^)]+)\)/);
+                            p.x = translateMatch ? parseFloat(translateMatch[1]) : 0;
+                            p.y = translateMatch ? parseFloat(translateMatch[2]) : 0;
+                        });
+                    }
+                });
+            });
+        }
+
+        window.loadPermanentGraph = async function() {
+            try {
+                const res = await fetch('/api/graph/permanent/svg');
+                if (res.ok) {
+                    const svgString = await res.text();
+                    document.getElementById('permanent-graph-container').innerHTML = svgString;
+                    makeGraphInteractive('permanent-graph-container');
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(svgString, 'image/svg+xml');
+                    const nodes = doc.querySelectorAll('.node').length;
+                    const edges = doc.querySelectorAll('line').length;
+
+                    document.getElementById('permanent-graph-stats').textContent = `${nodes} Nodes · ${edges} Edges`;
+                }
+            } catch (err) {
+                console.error("Failed to load permanent graph:", err);
+            }
+        }
+    </script>
 </body>
+
 </html>

@@ -20,7 +20,7 @@ class SessionManager:
         self._init_db()
 
     def _init_db(self) -> None:
-        """Create the sessions and memories tables if they do not exist."""
+        """Create the sessions, memories, and permanent graph tables if they do not exist."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -40,6 +40,26 @@ class SessionManager:
                     text TEXT NOT NULL,
                     metadata_json TEXT NOT NULL,
                     created_at TEXT NOT NULL
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS permanent_nodes (
+                    node_id TEXT PRIMARY KEY,
+                    label TEXT UNIQUE NOT NULL,
+                    type TEXT NOT NULL,
+                    color TEXT NOT NULL,
+                    text TEXT
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS permanent_edges (
+                    edge_id TEXT PRIMARY KEY,
+                    source_id TEXT NOT NULL,
+                    target_id TEXT NOT NULL,
+                    edge_type TEXT NOT NULL,
+                    FOREIGN KEY (source_id) REFERENCES permanent_nodes(node_id),
+                    FOREIGN KEY (target_id) REFERENCES permanent_nodes(node_id),
+                    UNIQUE(source_id, target_id)
                 )
             """)
             conn.commit()
@@ -231,3 +251,62 @@ class SessionManager:
             cursor.execute("DELETE FROM memories WHERE memory_id = ?", (memory_id,))
             conn.commit()
             return cursor.rowcount > 0
+
+    def add_permanent_node(self, label: str, node_type: str, color: str, text: str) -> str:
+        """Add a node to the permanent graph, returning its node_id. Avoids label duplicates."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT node_id FROM permanent_nodes WHERE label = ?", (label,))
+            row = cursor.fetchone()
+            if row:
+                return row[0]
+            node_id = str(uuid.uuid4())
+            cursor.execute(
+                "INSERT INTO permanent_nodes (node_id, label, type, color, text) VALUES (?, ?, ?, ?, ?)",
+                (node_id, label, node_type, color, text)
+            )
+            conn.commit()
+            return node_id
+
+    def add_permanent_edge(self, source_id: str, target_id: str, edge_type: str) -> None:
+        """Add a link between permanent nodes."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT OR IGNORE INTO permanent_edges (edge_id, source_id, target_id, edge_type) VALUES (?, ?, ?, ?)",
+                (str(uuid.uuid4()), source_id, target_id, edge_type)
+            )
+            conn.commit()
+
+    def get_permanent_nodes(self) -> List[Dict[str, Any]]:
+        """Return all permanent nodes."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT node_id, label, type, color, text FROM permanent_nodes")
+            rows = cursor.fetchall()
+            return [
+                {
+                    "node_id": row[0],
+                    "label": row[1],
+                    "type": row[2],
+                    "color": row[3],
+                    "text": row[4]
+                }
+                for row in rows
+            ]
+
+    def get_permanent_edges(self) -> List[Dict[str, Any]]:
+        """Return all permanent edges."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT edge_id, source_id, target_id, edge_type FROM permanent_edges")
+            rows = cursor.fetchall()
+            return [
+                {
+                    "edge_id": row[0],
+                    "source_id": row[1],
+                    "target_id": row[2],
+                    "edge_type": row[3]
+                }
+                for row in rows
+            ]

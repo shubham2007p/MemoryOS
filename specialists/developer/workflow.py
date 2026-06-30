@@ -17,7 +17,7 @@ class DeveloperSpecialist:
     """Specialist responsible for querying memory and generating answers or code."""
 
     def __init__(self) -> None:
-        self.model_name = DEVELOPER_MODEL
+        self.model_name = "gemini-2.5-flash"
         self.temperature = TEMPERATURE
         self.system_prompt = load_specialist_prompt("developer")
 
@@ -58,7 +58,7 @@ class DeveloperSpecialist:
                     "str_val": str(entry)
                 })
 
-        # Synthesize answer from recalled facts using centralized Groq client
+        # Synthesize answer from recalled facts using centralized Gemini client
         if not context_used:
             answer = "I could not find any relevant memories to answer your question."
         else:
@@ -74,28 +74,27 @@ class DeveloperSpecialist:
             fact_summary = "\n- ".join(facts)
             
             try:
-                from backend.core.groq_client import get_groq_client
-                client = get_groq_client()
+                from backend.core.gemini_client import get_gemini_model
+                import asyncio
                 
-                messages = [
-                    {"role": "system", "content": self.system_prompt},
-                    {
-                        "role": "user",
-                        "content": (
-                            f"User Query: {query}\n\n"
-                            f"Recalled Memory Context:\n{fact_summary}\n\n"
-                            f"Synthesize a helpful answer based on the recalled memory context. "
-                            f"If the context does not contain enough info, politely guide the user."
-                        )
-                    }
-                ]
-                
-                completion = client.chat.completions.create(
-                    model=self.model_name,
-                    messages=messages,
-                    temperature=self.temperature
+                model = get_gemini_model("gemini-2.5-flash")
+                prompt = (
+                    f"System Instructions:\n{self.system_prompt}\n\n"
+                    f"User Query: {query}\n\n"
+                    f"Recalled Memory Context:\n{fact_summary}\n\n"
+                    f"Synthesize a helpful answer based on the recalled memory context. "
+                    f"If the context does not contain enough info, politely guide the user."
                 )
-                answer = completion.choices[0].message.content
+                
+                # Avoid getting stuck by using an async call with a timeout
+                response = await asyncio.wait_for(
+                    model.generate_content_async(prompt),
+                    timeout=10.0
+                )
+                answer = response.text
+            except asyncio.TimeoutError:
+                logger.error("DeveloperSpecialist LLM reasoning timed out after 10s")
+                answer = f"Synthesizing timed out. Based on my memory, I found the following relevant facts:\n- {fact_summary}"
             except Exception as e:
                 logger.error(f"Error in DeveloperSpecialist LLM reasoning: {e}")
                 # Fallback to pure memory echo on API failure

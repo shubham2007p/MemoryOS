@@ -24,7 +24,7 @@ async def setup_cognee() -> None:
         # Configure Cognee to use Gemini for LLM tasks (invalid groq provider fallback)
         cognee.config.set_llm_provider("gemini")
         cognee.config.set_llm_api_key(settings.gemini_api_key)
-        cognee.config.set_llm_model("gemini/gemini-1.5-flash")
+        cognee.config.set_llm_model("gemini/gemini-2.5-flash")
         
         # Configure Cognee to use Gemini for embeddings (non-OpenAI setup)
         cognee.config.set_embedding_provider("gemini")

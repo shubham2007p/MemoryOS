@@ -9,7 +9,9 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+
 
 from memory.cognee_adapter import setup_cognee
 from memory.improve import improve_memory
@@ -17,6 +19,8 @@ from orchestrator.session_manager import SessionManager
 from orchestrator.workflow_engine import WorkflowEngine
 from config.settings import settings, verify_settings_on_startup
 from backend.core.groq_client import get_groq_client, check_groq_connectivity
+from orchestrator.graph_viewer import generate_svg_graph
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("backend.main")
@@ -230,7 +234,18 @@ async def run_researcher(request: QueryRequest) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/graph/svg")
+def get_graph_svg(session_id: Optional[str] = None) -> HTMLResponse:
+    """Generate and return the SVG Knowledge Graph for a session."""
+    try:
+        memories = session_manager.list_memories(session_id=session_id)
+        svg_content = generate_svg_graph(memories, active_session_id=session_id or "")
+        return HTMLResponse(content=svg_content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Memory operations endpoints
+
 @app.get("/api/memory")
 def get_memories(session_id: Optional[str] = None, q: Optional[str] = None) -> List[Dict[str, Any]]:
     """List all logged memories, with optional session filtering and text query search."""
@@ -263,6 +278,102 @@ async def run_improve(session_ids: Optional[List[str]] = Body(None)) -> Dict[str
     try:
         result = await improve_memory(session_ids=session_ids)
         return {"status": "improved", "details": str(result)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class PromoteRequest(BaseModel):
+    session_id: str
+
+
+@app.post("/api/graph/promote")
+async def promote_graph(request: PromoteRequest) -> Dict[str, Any]:
+    """Analyze temporary session graph learner facts, extract keywords/concepts, and promote to the permanent graph."""
+    session_id = request.session_id
+    memories = session_manager.list_memories(session_id=session_id)
+    learner_facts = [m["text"] for m in memories if m["specialist"] == "learner"]
+
+    if not learner_facts:
+        return {"status": "skipped", "message": "No facts available in this session to promote."}
+
+    try:
+        import sqlite3
+        import cognee
+
+        stop_words = {
+            "is", "a", "an", "the", "and", "or", "in", "on", "at", "for", "to", "of", "with", "about", 
+            "are", "you", "to", "be", "was", "were", "has", "have", "had", "been", "will", "would", 
+            "shall", "should", "can", "could", "may", "might", "must", "us", "we", "i", "my", "me", 
+            "he", "she", "they", "them", "it", "its", "their", "his", "her", "as", "by", "from", "into",
+            "out", "over", "under", "again", "then", "once", "here", "there", "when", "where", "why", 
+            "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", 
+            "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", 
+            "just", "don", "should", "now", "using", "used", "make", "made", "does", "do", "did"
+        }
+
+        promoted_count = 0
+        added_node_ids = {}
+
+        for fact in learner_facts:
+            # Clean words
+            words = []
+            for w in fact.split():
+                w_clean = w.strip(".,?!();:\"'").strip()
+                if w_clean:
+                    words.append(w_clean)
+
+            important_words = []
+            for w in words:
+                if w.lower() not in stop_words and len(w) > 2:
+                    important_words.append(w)
+
+            if not important_words:
+                continue
+
+            # First word (or first capitalized word) is main concept
+            main_word = important_words[0]
+            for w in important_words[1:]:
+                if w[0].isupper():
+                    main_word = w
+                    break
+
+            main_color = "#A88BEB" # Purple for main concepts
+            main_desc = f"Main concept from: {fact}"
+            main_id = session_manager.add_permanent_node(main_word, "main", main_color, main_desc)
+            added_node_ids[main_word] = main_id
+            promoted_count += 1
+
+            for child_word in important_words:
+                if child_word == main_word:
+                    continue
+                child_color = "#FF8A8A" # Red/pink for child terms
+                child_desc = f"Term related to {main_word} in session memory"
+                child_id = session_manager.add_permanent_node(child_word, "child", child_color, child_desc)
+                added_node_ids[child_word] = child_id
+                
+                # Add link
+                session_manager.add_permanent_edge(child_id, main_id, "parent-child")
+
+        # Optionally run Cognee improve to keep everything aligned
+        try:
+            await cognee.improve()
+        except Exception as ie:
+            logger.error(f"Cognee improve during promotion skipped or failed: {ie}")
+
+        return {"status": "success", "message": f"Successfully promoted {promoted_count} session concepts to the Permanent Graph."}
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Promotion failed: {str(ex)}")
+
+
+@app.get("/api/graph/permanent/svg")
+def get_permanent_graph_svg() -> HTMLResponse:
+    """Generate and return the Permanent Knowledge Graph SVG representation."""
+    try:
+        nodes = session_manager.get_permanent_nodes()
+        edges = session_manager.get_permanent_edges()
+        from orchestrator.graph_viewer import generate_permanent_svg_graph
+        svg_content = generate_permanent_svg_graph(nodes, edges)
+        return HTMLResponse(content=svg_content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
